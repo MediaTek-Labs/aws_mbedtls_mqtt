@@ -262,8 +262,6 @@ int iot_tls_write(Network *pNetwork, unsigned char *pMsg, int len, int timeout_m
 
 	int written;
 	int frags;
-	Serial.print("in iot_tls_write, the len is ");
-	Serial.println(len);
 
 	for (written = 0, frags = 0; written < len; written += ret, frags++) {
 		while ((ret = mbedtls_ssl_write(&ssl, pMsg + written, len - written)) <= 0) {
@@ -272,12 +270,7 @@ int iot_tls_write(Network *pNetwork, unsigned char *pMsg, int len, int timeout_m
 				return ret;
 			}
 		}
-		Serial.print("ret for mbedtls_ssl_write is ");
-		Serial.println(ret);
 	}
-
-	Serial.print("in iot_tls_write the written is ");
-	Serial.println(written);
 
 	return written;
 }
