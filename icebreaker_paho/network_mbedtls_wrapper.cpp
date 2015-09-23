@@ -237,7 +237,7 @@ int iot_tls_connect(Network *pNetwork, TLSConnectParams params) {
 	if (params.ServerVerificationFlag == true) {
 		if ((flags = mbedtls_ssl_get_verify_result(&ssl)) != 0) {
 			char vrfy_buf[512];
-			ERROR(" failed\n");
+			Serial.println(" failed");
 			mbedtls_x509_crt_verify_info(vrfy_buf, sizeof(vrfy_buf), "  ! ", flags);
 			ERROR("%s\n", vrfy_buf);
 		} else {
@@ -245,7 +245,7 @@ int iot_tls_connect(Network *pNetwork, TLSConnectParams params) {
 			ret = NONE_ERROR;
 		}
 	} else {
-		DEBUG(" Server Verification skipped\n");
+		Serial.println(" Server Verification skipped");
 		ret = NONE_ERROR;
 	}
 
@@ -262,6 +262,8 @@ int iot_tls_write(Network *pNetwork, unsigned char *pMsg, int len, int timeout_m
 
 	int written;
 	int frags;
+	Serial.print("in iot_tls_write, the len is ");
+	Serial.println(len);
 
 	for (written = 0, frags = 0; written < len; written += ret, frags++) {
 		while ((ret = mbedtls_ssl_write(&ssl, pMsg + written, len - written)) <= 0) {
@@ -270,7 +272,12 @@ int iot_tls_write(Network *pNetwork, unsigned char *pMsg, int len, int timeout_m
 				return ret;
 			}
 		}
+		Serial.print("ret for mbedtls_ssl_write is ");
+		Serial.println(ret);
 	}
+
+	Serial.print("in iot_tls_write the written is ");
+	Serial.println(written);
 
 	return written;
 }
