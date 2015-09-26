@@ -40,6 +40,7 @@ typedef struct MessageData MessageData;
 
 typedef void (*messageHandler)(MessageData*);
 typedef void (*pApplicationHandler_t)(void);
+typedef void (*disconnectHander_t)(void);
 
 struct MQTTMessage
 {
@@ -69,6 +70,7 @@ int MQTTDisconnect (Client*);
 int MQTTYield (Client*, int);
 
 void setDefaultMessageHandler(Client*, messageHandler);
+void setDisconnectHandler(Client*, disconnectHander_t disconnectHandler);
 
 void MQTTClient(Client*, Network*, unsigned int, unsigned char*, size_t, unsigned char*, size_t);
 
@@ -90,6 +92,7 @@ struct Client {
     } messageHandlers[MAX_MESSAGE_HANDLERS];      // Message handlers are indexed by subscription topic
     
     void (*defaultMessageHandler) (MessageData*);
+    disconnectHander_t disconnectHandler;
     
     Network* ipstack;
     Timer ping_timer;

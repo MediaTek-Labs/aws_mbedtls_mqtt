@@ -18,9 +18,10 @@
 
 static Network n;
 static Client c;
+static iot_disconnect_handler clientDisconnectHandler;
 
-#define TxBufLen 256
-#define RxBufLen 256
+#define TxBufLen 512
+#define RxBufLen 512
 static unsigned char writebuf[TxBufLen];
 static unsigned char readbuf[RxBufLen];
 
@@ -53,8 +54,14 @@ void pahoMessageCallback(MessageData* md) {
 	((iot_message_handler)(md->applicationHandler))(params);
 }
 
-static int parseConnectParamsForError(MQTTConnectParams *pParams) {
-	int rc = NONE_ERROR;
+void pahoDisconnectHandler(void) {
+	if (clientDisconnectHandler != NULL) {
+		clientDisconnectHandler();
+	}
+}
+
+static IoT_Error_t parseConnectParamsForError(MQTTConnectParams *pParams) {
+	IoT_Error_t rc = NONE_ERROR;
 	if (
 	NULL == pParams->pClientID ||
 	NULL == pParams->pHostURL) {
@@ -63,8 +70,8 @@ static int parseConnectParamsForError(MQTTConnectParams *pParams) {
 	return rc;
 }
 
-int iot_mqtt_connect(MQTTConnectParams *pParams) {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams) {
+	IoT_Error_t rc = NONE_ERROR;
 
 	rc = parseConnectParamsForError(pParams);
 
@@ -77,10 +84,10 @@ int iot_mqtt_connect(MQTTConnectParams *pParams) {
 		TLSParams.pDeviceCertLocation = pParams->pDeviceCertLocation;
 		TLSParams.pDevicePrivateKeyLocation = pParams->pDevicePrivateKeyLocation;
 		TLSParams.pRootCALocation = pParams->pRootCALocation;
-		TLSParams.timeout_ms = pParams->commandTimeout_ms;
+		TLSParams.timeout_ms = pParams->tlsHandshakeTimeout_ms;
 		TLSParams.ServerVerificationFlag = pParams->isSSLHostnameVerify;
 
-		rc = iot_tls_connect(&n, TLSParams);
+		rc = (IoT_Error_t)iot_tls_connect(&n, TLSParams);
 
 		if (NONE_ERROR == rc) {
 			MQTTClient(&c, &n, 1000, writebuf, TxBufLen, readbuf, RxBufLen);
@@ -100,6 +107,10 @@ int iot_mqtt_connect(MQTTConnectParams *pParams) {
 				data.MQTTVersion = (unsigned char) (4); // default MQTT version = 3.1.1
 			}
 
+			// register our disconnect handler, save customer's handler
+			setDisconnectHandler(&c, pahoDisconnectHandler);
+			clientDisconnectHandler = pParams->disconnectHandler;
+
 			data.clientID.cstring = pParams->pClientID;
 			data.username.cstring = pParams->pUserName;
 			data.password.cstring = pParams->pPassword;
@@ -118,8 +129,8 @@ int iot_mqtt_connect(MQTTConnectParams *pParams) {
 	return rc;
 }
 
-int iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
+	IoT_Error_t rc = NONE_ERROR;
 
 	//change qos to 0 here
 	if (0 != MQTTSubscribe(&c, pParams->pTopic, pParams->qos, pahoMessageCallback, (void (*)(void))(pParams->mHandler))) {
@@ -128,8 +139,8 @@ int iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
 	return rc;
 }
 
-int iot_mqtt_publish(MQTTPublishParams *pParams) {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams) {
+	IoT_Error_t rc = NONE_ERROR;
 
 	MQTTMessage Message;
 	Message.dup = pParams->MessageParams.isDuplicate;
@@ -146,8 +157,8 @@ int iot_mqtt_publish(MQTTPublishParams *pParams) {
 	return rc;
 }
 
-int iot_mqtt_unsubscribe(char *pTopic) {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_unsubscribe(char *pTopic) {
+	IoT_Error_t rc = NONE_ERROR;
 
 	if(0 != MQTTUnsubscribe(&c, pTopic)){
 		rc = UNSUBSCRIBE_ERROR;
@@ -155,8 +166,8 @@ int iot_mqtt_unsubscribe(char *pTopic) {
 	return rc;
 }
 
-int iot_mqtt_disconnect() {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_disconnect() {
+	IoT_Error_t rc = NONE_ERROR;
 
 	if(0 != MQTTDisconnect(&c)){
 		rc = DISCONNECT_ERROR;
@@ -165,8 +176,8 @@ int iot_mqtt_disconnect() {
 	return rc;
 }
 
-int iot_mqtt_yield(int timeout) {
-	int rc = NONE_ERROR;
+IoT_Error_t iot_mqtt_yield(int timeout) {
+	IoT_Error_t rc = NONE_ERROR;
 	if(0 != MQTTYield(&c, timeout)){
 		rc = YIELD_ERROR;
 	}
@@ -175,4 +186,14 @@ int iot_mqtt_yield(int timeout) {
 
 bool iot_is_mqtt_connected(void) {
 	return c.isconnected;
+}
+
+void iot_mqtt_init(MQTTClient_t *pClient){
+	pClient->connect = iot_mqtt_connect;
+	pClient->disconnect = iot_mqtt_disconnect;
+	pClient->isConnected = iot_is_mqtt_connected;
+	pClient->publish = iot_mqtt_publish;
+	pClient->subscribe = iot_mqtt_subscribe;
+	pClient->unsubscribe = iot_mqtt_unsubscribe;
+	pClient->yield = iot_mqtt_yield;
 }

@@ -44,7 +44,8 @@ typedef enum {
 	SSL_INIT_ERROR = -13,				/** ? */
 	SSL_CERT_ERROR= -14,				/** An error occurred when loading the certificates.  The certificates could not be located or are incorrectly formatted. */
 	UNSUBSCRIBE_ERROR = -15,			/** The unsubscribe failed.  The unsubscribe control packet could not be sent. */
-	JSON_PARSE_ERROR = -16				/** An error occurred while parsing the JSON string.  Usually malformed JSON. */
+	JSON_PARSE_ERROR = -16,				/** An error occurred while parsing the JSON string.  Usually malformed JSON. */
+	WAIT_FOR_PUBLISH = -17				/** Shadow: The response Ack table is currently full waiting for previously published updates */
 }IoT_Error_t;
 
 #endif /* AWS_IOT_SDK_SRC_IOT_ERROR_H_ */

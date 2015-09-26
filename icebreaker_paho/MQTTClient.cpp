@@ -459,8 +459,8 @@ int MQTTUnsubscribe(Client* c, const char* topicFilter)
     topic.cstring = (char *)topicFilter;
     int len = 0;
 
-    InitTimer(&timer);
-    countdown_ms(&timer, c->command_timeout_ms);
+    // InitTimer(&timer);
+    // countdown_ms(&timer, c->command_timeout_ms);
     
     if (!c->isconnected)
         goto exit;
@@ -554,3 +554,6 @@ int MQTTDisconnect(Client* c)
     return rc;
 }
 
+void setDisconnectHandler(Client* c, disconnectHander_t disconnectHandler) {
+	c->disconnectHandler = disconnectHandler;
+}

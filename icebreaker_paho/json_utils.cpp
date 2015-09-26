@@ -13,6 +13,15 @@
  * permissions and limitations under the License.
  */
 
+/**
+ * @file json_utils.c
+ * @brief Utilities for manipulating JSON
+ *
+ * json_utils provides JSON parsing utilities for use with the IoT SDK.
+ * Underlying JSON parsing relies on the Jasmine JSON parser.
+ *
+ */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -27,7 +36,7 @@ int8_t jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	return -1;
 }
 
-IoT_Error_t parseIntegerValue(int32_t *i, const char *jsonString, jsmntok_t *token) {
+IoT_Error_t parseUnsignedInteger32Value(uint32_t *i, const char *jsonString, jsmntok_t *token) {
 	if (token->type != JSMN_PRIMITIVE) {
 		WARN("Token was not an integer");
 		return JSON_PARSE_ERROR;
@@ -35,6 +44,90 @@ IoT_Error_t parseIntegerValue(int32_t *i, const char *jsonString, jsmntok_t *tok
 
 	if (1 != sscanf(jsonString+token->start, "%d", i)) {
 		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseUnsignedInteger16Value(uint16_t *i, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not an integer");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseUnsignedInteger8Value(uint8_t *i, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not an integer");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseInteger32Value(int32_t *i, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not an integer");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseInteger16Value(int16_t *i, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not an integer");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseInteger8Value(int8_t *i, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not an integer");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+		WARN("Token was not an integer.");
+		return JSON_PARSE_ERROR;
+	}
+
+	return NONE_ERROR;
+}
+
+IoT_Error_t parseFloatValue(float *d, const char *jsonString, jsmntok_t *token) {
+	if (token->type != JSMN_PRIMITIVE) {
+		WARN("Token was not a double.");
+		return JSON_PARSE_ERROR;
+	}
+
+	if (1 != sscanf(jsonString+token->start, "%f", d)) {
+		WARN("Token was not a double.");
 		return JSON_PARSE_ERROR;
 	}
 
@@ -57,7 +150,7 @@ IoT_Error_t parseDoubleValue(double *d, const char *jsonString, jsmntok_t *token
 
 IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token) {
 	if (token->type != JSMN_PRIMITIVE) {
-		WARN("Token was not a bool.");
+		WARN("Token was not a primitive.");
 		return JSON_PARSE_ERROR;
 	}
 	if (jsonString[token->start]   == 't' &&

@@ -33,7 +33,7 @@ extern VMSTR key_p;
 extern void myprint(char *str);
 extern void myprintln(char *str);
 
-extern VMSTR CONNECT_IP_ADDRESS;
+extern const char* CONNECT_IP_ADDRESS;
 extern VMINT CONNECT_PORT;
 
 // extern SOCKADDR_IN       t_addr_in = {0};

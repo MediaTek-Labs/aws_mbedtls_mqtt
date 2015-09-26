@@ -58,6 +58,8 @@ typedef struct {
 	QoSLevel qos;
 } MQTTwillOptions;
 
+typedef void (*iot_disconnect_handler)(void);
+
 typedef struct {
 	char *pHostURL;
 	uint16_t port;
@@ -72,8 +74,10 @@ typedef struct {
 	bool isCleansession;
 	bool isWillMsgPresent;
 	MQTTwillOptions will;
-	uint32_t commandTimeout_ms;
+	uint32_t mqttCommandTimeout_ms;
+	uint32_t tlsHandshakeTimeout_ms;
 	bool isSSLHostnameVerify;
+	iot_disconnect_handler disconnectHandler;
 } MQTTConnectParams;
 
 typedef struct {
@@ -104,12 +108,33 @@ typedef struct {
 	MQTTMessageParams MessageParams;
 } MQTTPublishParams;
 
-int iot_mqtt_connect(MQTTConnectParams *pParams);
-int iot_mqtt_publish(MQTTPublishParams *pParams);
-int iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
-int iot_mqtt_unsubscribe(char *pTopic);
-int iot_mqtt_disconnect(void);
-int iot_mqtt_yield(int timeout);
+IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams);
+IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams);
+IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
+IoT_Error_t iot_mqtt_unsubscribe(char *pTopic);
+IoT_Error_t iot_mqtt_disconnect(void);
+IoT_Error_t iot_mqtt_yield(int timeout);
 bool iot_is_mqtt_connected(void);
+
+typedef IoT_Error_t (*pConnectFunc_t)(MQTTConnectParams *pParams);
+typedef IoT_Error_t (*pPublishFunc_t)(MQTTPublishParams *pParams);
+typedef IoT_Error_t (*pSubscribeFunc_t)(MQTTSubscribeParams *pParams);
+typedef IoT_Error_t (*pUnsubscribeFunc_t)(char *pTopic);
+typedef IoT_Error_t (*pDisconnectFunc_t)(void);
+typedef IoT_Error_t (*pYieldFunc_t)(int timeout);
+typedef bool (*pIsConnectedFunc_t)(void);
+
+typedef struct{
+	pConnectFunc_t connect;
+	pPublishFunc_t publish;
+	pSubscribeFunc_t subscribe;
+	pUnsubscribeFunc_t unsubscribe;
+	pDisconnectFunc_t disconnect;
+	pYieldFunc_t yield;
+	pIsConnectedFunc_t isConnected;
+}MQTTClient_t;
+
+void iot_mqtt_init(MQTTClient_t *pClient);
+
 
 #endif /* AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H_ */

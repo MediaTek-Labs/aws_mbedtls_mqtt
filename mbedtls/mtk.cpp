@@ -17,7 +17,7 @@ VMSTR cert_path;
 VMSTR crt_p;
 VMSTR key_p;
 
-VMSTR CONNECT_IP_ADDRESS;
+const char* CONNECT_IP_ADDRESS;
 VMINT CONNECT_PORT;
 // mbedtls_entropy_context entropy;
 // mbedtls_ctr_drbg_context ctr_drbg;
