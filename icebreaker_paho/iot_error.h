@@ -40,12 +40,15 @@ typedef enum {
 	SSL_CONNECT_ERROR = -9,				/** The TLS handshake failed. */
 	TCP_SETUP_ERROR =-10,				/** ? */
 	SSL_CONNECT_TIMEOUT_ERROR = -11,	/** A timeout occurred while waiting for the TLS handshake to complete. */
-	SSL_WRITE_ERROR = -12,				/** ? */
+	SSL_WRITE_ERROR = -12,				/** A Generic error based on the platform used */
 	SSL_INIT_ERROR = -13,				/** ? */
 	SSL_CERT_ERROR= -14,				/** An error occurred when loading the certificates.  The certificates could not be located or are incorrectly formatted. */
 	UNSUBSCRIBE_ERROR = -15,			/** The unsubscribe failed.  The unsubscribe control packet could not be sent. */
 	JSON_PARSE_ERROR = -16,				/** An error occurred while parsing the JSON string.  Usually malformed JSON. */
-	WAIT_FOR_PUBLISH = -17				/** Shadow: The response Ack table is currently full waiting for previously published updates */
+	WAIT_FOR_PUBLISH = -17,				/** Shadow: The response Ack table is currently full waiting for previously published updates */
+	SSL_WRITE_TIMEOUT_ERROR = -18, 		/** SSL Write times out */
+	SSL_READ_TIMEOUT_ERROR = -19, 		/** SSL Read times out */
+	SSL_READ_ERROR = -20				/** A Generic error based on the platform used */
 }IoT_Error_t;
 
 #endif /* AWS_IOT_SDK_SRC_IOT_ERROR_H_ */

@@ -15,6 +15,7 @@
  *******************************************************************************/
 #include <Arduino.h>
 #include "MQTTClient.h"
+#include <string.h>
 
 void NewMessageData(MessageData* md, MQTTString* aTopicName, MQTTMessage* aMessgage, pApplicationHandler_t applicationHandler) {
     md->topicName = aTopicName;
@@ -406,8 +407,11 @@ int MQTTSubscribe(Client* c, const char* topicFilter, int qos, messageHandler me
     int rc = FAILURE;  
     Timer timer;
     int len = 0;
+    int indexOfFreemessageHandler;
+
     MQTTString topic = MQTTString_initializer;
     topic.cstring = (char *)topicFilter;
+    unsigned char isMessageHandlerFree = 0;
     
     // InitTimer(&timer);
     // countdown_ms(&timer, c->command_timeout_ms);
@@ -458,7 +462,7 @@ int MQTTUnsubscribe(Client* c, const char* topicFilter)
     MQTTString topic = MQTTString_initializer;
     topic.cstring = (char *)topicFilter;
     int len = 0;
-
+	int i=0;
     // InitTimer(&timer);
     // countdown_ms(&timer, c->command_timeout_ms);
     

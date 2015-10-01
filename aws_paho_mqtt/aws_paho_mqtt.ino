@@ -38,7 +38,7 @@
 #define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
 
 /* change server settings here */
-VMSTR IP_ADDRESS = "54.209.114.4"; //currently only support IP address
+VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
 VMINT PORT = 8883;
 char cafileName[] = "G5.pem";
 char clientCRTName[] = "cert.pem";
@@ -50,7 +50,7 @@ bool infinitePublishFlag;
 char cPayload[100];
 int32_t i;
 int rc;
-char HostAddress[255] = IOT_PB_US_EAST_1;
+char HostAddress[255] = "data.iot.us-east-1.amazonaws.com";
 uint16_t port = 8883;
 uint32_t publishCount = 0;
 LWiFiClient c;
@@ -120,7 +120,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
   
               MQTTSubscribeParams subParams;
               subParams.mHandler = MQTTcallbackHandler;
-              subParams.pTopic = "mtktestTopic2";
+              subParams.pTopic = "mtktestTopic5";
               subParams.qos = qos;
               if (NONE_ERROR == rc) {
             Serial.print("Subscribing...");
@@ -139,7 +139,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               Msg.PayloadLen = strlen(cPayload) + 1;
   
               MQTTPublishParams Params;
-              Params.pTopic = "mtktestTopic2";
+              Params.pTopic = "mtktestTopic5";
               Params.MessageParams = Msg;
 
               if(publishCount != 0){

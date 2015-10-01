@@ -29,9 +29,12 @@
 #include "iot_log.h"
 
 int8_t jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start
-			&& strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
-		return 0;
+	if (tok->type == JSMN_STRING) {
+		if ((int) strlen(s) == tok->end - tok->start) {
+			if (strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+				return 0;
+			}
+		}
 	}
 	return -1;
 }
@@ -42,7 +45,7 @@ IoT_Error_t parseUnsignedInteger32Value(uint32_t *i, const char *jsonString, jsm
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -56,7 +59,7 @@ IoT_Error_t parseUnsignedInteger16Value(uint16_t *i, const char *jsonString, jsm
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -70,7 +73,7 @@ IoT_Error_t parseUnsignedInteger8Value(uint8_t *i, const char *jsonString, jsmnt
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -84,7 +87,7 @@ IoT_Error_t parseInteger32Value(int32_t *i, const char *jsonString, jsmntok_t *t
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -98,7 +101,7 @@ IoT_Error_t parseInteger16Value(int16_t *i, const char *jsonString, jsmntok_t *t
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -112,7 +115,7 @@ IoT_Error_t parseInteger8Value(int8_t *i, const char *jsonString, jsmntok_t *tok
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%d", i)) {
+	if (1 != sscanf(jsonString + token->start, "%d", i)) {
 		WARN("Token was not an integer.");
 		return JSON_PARSE_ERROR;
 	}
@@ -120,14 +123,14 @@ IoT_Error_t parseInteger8Value(int8_t *i, const char *jsonString, jsmntok_t *tok
 	return NONE_ERROR;
 }
 
-IoT_Error_t parseFloatValue(float *d, const char *jsonString, jsmntok_t *token) {
+IoT_Error_t parseFloatValue(float *f, const char *jsonString, jsmntok_t *token) {
 	if (token->type != JSMN_PRIMITIVE) {
-		WARN("Token was not a double.");
+		WARN("Token was not a float.");
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%f", d)) {
-		WARN("Token was not a double.");
+	if (1 != sscanf(jsonString+token->start, "%f", f)) {
+		WARN("Token was not a float.");
 		return JSON_PARSE_ERROR;
 	}
 
@@ -140,7 +143,7 @@ IoT_Error_t parseDoubleValue(double *d, const char *jsonString, jsmntok_t *token
 		return JSON_PARSE_ERROR;
 	}
 
-	if (1 != sscanf(jsonString+token->start, "%lf", d)) {
+	if (1 != sscanf(jsonString + token->start, "%lf", d)) {
 		WARN("Token was not a double.");
 		return JSON_PARSE_ERROR;
 	}
@@ -153,16 +156,12 @@ IoT_Error_t parseBooleanValue(bool *b, const char *jsonString, jsmntok_t *token)
 		WARN("Token was not a primitive.");
 		return JSON_PARSE_ERROR;
 	}
-	if (jsonString[token->start]   == 't' &&
-		jsonString[token->start+1] == 'r' &&
-		jsonString[token->start+2] == 'u' &&
-		jsonString[token->start+3] == 'e') {
+	if (jsonString[token->start] == 't' && jsonString[token->start + 1] == 'r' && jsonString[token->start + 2] == 'u'
+			&& jsonString[token->start + 3] == 'e') {
 		*b = true;
-	} else if (	jsonString[token->start]   == 'f' &&
-				jsonString[token->start+1] == 'a' &&
-				jsonString[token->start+2] == 'l' &&
-				jsonString[token->start+3] == 's' &&
-				jsonString[token->start+4] == 'e') {
+	} else if (jsonString[token->start] == 'f' && jsonString[token->start + 1] == 'a'
+			&& jsonString[token->start + 2] == 'l' && jsonString[token->start + 3] == 's'
+			&& jsonString[token->start + 4] == 'e') {
 		*b = false;
 	} else {
 		WARN("Token was not a bool.");
@@ -178,7 +177,7 @@ IoT_Error_t parseStringValue(char *buf, const char *jsonString, jsmntok_t *token
 		return JSON_PARSE_ERROR;
 	}
 	size = token->end - token->start;
-	memcpy(buf, jsonString+token->start, size);
+	memcpy(buf, jsonString + token->start, size);
 	buf[size] = '\0';
 	return NONE_ERROR;
 }

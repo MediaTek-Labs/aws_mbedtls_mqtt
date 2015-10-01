@@ -44,13 +44,117 @@
  * @return         	0 if equal, 1 otherwise
  */
 int8_t jsoneq(const char *json, jsmntok_t *tok, const char *s);
+
+/**
+ * @brief          Parse a signed 32-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of int32_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseInteger32Value(int32_t *i, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse a signed 16-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of int16_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseInteger16Value(int16_t *i, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse a signed 8-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of int8_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseInteger8Value(int8_t *i, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse an unsigned 32-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of uint32_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseUnsignedInteger32Value(uint32_t *i, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse an unsigned 16-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of uint16_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseUnsignedInteger16Value(uint16_t *i, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse an unsigned 8-bit integer value from a JSON node.
+ *
+ * Given a JSON node parse the integer value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param i				address of uint8_t to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseUnsignedInteger8Value(uint8_t *i, const char *jsonString, jsmntok_t *token);
-IoT_Error_t parseFloatValue(float *d, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse a float value from a JSON node.
+ *
+ * Given a JSON node parse the float value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param f				address of float to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
+IoT_Error_t parseFloatValue(float *f, const char *jsonString, jsmntok_t *token);
+
+/**
+ * @brief          Parse a double value from a JSON node.
+ *
+ * Given a JSON node parse the double value from the value.
+ *
+ * @param jsonString	json string
+ * @param tok     		json token - pointer to JSON node
+ * @param d				address of double to be updated
+ *
+ * @return         		NONE_ERROR - success
+ * @return				JSON_PARSE_ERROR - error parsing value
+ */
 IoT_Error_t parseDoubleValue(double *d, const char *jsonString, jsmntok_t *token);
 
 /**
