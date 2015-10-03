@@ -33,6 +33,9 @@
 #include "json_utils.h"
 #include "iot_log.h"
 
+#ifdef connect
+#undef connect
+#endif
 #include <LTask.h>
 #include <LWiFi.h>
 #include <LWiFiClient.h>
