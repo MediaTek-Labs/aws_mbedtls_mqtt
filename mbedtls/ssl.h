@@ -3,23 +3,22 @@
  *
  * \brief SSL/TLS functions.
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #ifndef MBEDTLS_SSL_H
 #define MBEDTLS_SSL_H
@@ -126,6 +125,7 @@
 #define MBEDTLS_ERR_SSL_WANT_READ                         -0x6900  /**< Connection requires a read call. */
 #define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /**< Connection requires a write call. */
 #define MBEDTLS_ERR_SSL_TIMEOUT                           -0x6800  /**< The operation timed out. */
+#define MBEDTLS_ERR_SSL_CLIENT_RECONNECT                  -0x6780  /**< The client initiated a reconnect from the same port. */
 
 /*
  * Various constants
@@ -138,6 +138,8 @@
 
 #define MBEDTLS_SSL_TRANSPORT_STREAM            0   /*!< TLS      */
 #define MBEDTLS_SSL_TRANSPORT_DATAGRAM          1   /*!< DTLS     */
+
+#define MBEDTLS_SSL_MAX_HOST_NAME_LEN           255 /*!< Maximum host name defined in RFC 1035 */
 
 /* RFC 6066 section 4, see also mfl_code_to_length in ssl_tls.c
  * NONE must be zero so that memset()ing structure to zero works */
@@ -220,7 +222,9 @@
 #endif
 
 /*
- * Size of the input / output buffer.
+ * Maxium fragment length in bytes,
+ * determines the size of each of the two internal I/O buffers.
+ *
  * Note: the RFC defines the default size of SSL / TLS messages. If you
  * change the value here, other clients / servers may not be able to
  * communicate with you anymore. Only change this value if you control
@@ -838,7 +842,7 @@ int mbedtls_ssl_get_ciphersuite_id( const char *ciphersuite_name );
 
 /**
  * \brief          Initialize an SSL context
- *                 Just makes the context ready for mbetls_ssl_setup() or
+ *                 Just makes the context ready for mbedtls_ssl_setup() or
  *                 mbedtls_ssl_free()
  *
  * \param ssl      SSL context
@@ -1168,6 +1172,11 @@ typedef int mbedtls_ssl_cookie_check_t( void *ctx,
  *                  the MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED that is expected
  *                  on the first handshake attempt when this is enabled.
  *
+ * \note            This is also necessary to handle client reconnection from
+ *                  the same port as described in RFC 6347 section 4.2.8 (only
+ *                  the variant with cookies is supported currently). See
+ *                  comments on \c mbedtls_ssl_read() for details.
+ *
  * \param conf              SSL configuration
  * \param f_cookie_write    Cookie write callback
  * \param f_cookie_check    Cookie check callback
@@ -1380,7 +1389,7 @@ void mbedtls_ssl_conf_ciphersuites_for_version( mbedtls_ssl_config *conf,
  * \param profile  Profile to use
  */
 void mbedtls_ssl_conf_cert_profile( mbedtls_ssl_config *conf,
-                                    mbedtls_x509_crt_profile *profile );
+                                    const mbedtls_x509_crt_profile *profile );
 
 /**
  * \brief          Set the data required to verify peer certificate
@@ -2025,6 +2034,26 @@ const char *mbedtls_ssl_get_version( const mbedtls_ssl_context *ssl );
  */
 int mbedtls_ssl_get_record_expansion( const mbedtls_ssl_context *ssl );
 
+#if defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH)
+/**
+ * \brief          Return the maximum fragment length (payload, in bytes).
+ *                 This is the value negotiated with peer if any,
+ *                 or the locally configured value.
+ *
+ * \note           With DTLS, \c mbedtls_ssl_write() will return an error if
+ *                 called with a larger length value.
+ *                 With TLS, \c mbedtls_ssl_write() will fragment the input if
+ *                 necessary and return the number of bytes written; it is up
+ *                 to the caller to call \c mbedtls_ssl_write() again in
+ *                 order to send the remaining bytes if any.
+ *
+ * \param ssl      SSL context
+ *
+ * \return         Current maximum fragment length.
+ */
+size_t mbedtls_ssl_get_max_frag_len( const mbedtls_ssl_context *ssl );
+#endif /* MBEDTLS_SSL_MAX_FRAGMENT_LENGTH */
+
 #if defined(MBEDTLS_X509_CRT_PARSE_C)
 /**
  * \brief          Return the peer certificate from the current connection
@@ -2068,29 +2097,35 @@ int mbedtls_ssl_get_session( const mbedtls_ssl_context *ssl, mbedtls_ssl_session
  *
  * \param ssl      SSL context
  *
- * \return         0 if successful, MBEDTLS_ERR_SSL_WANT_READ,
- *                 MBEDTLS_ERR_SSL_WANT_WRITE, or a specific SSL error code.
+ * \return         0 if successful, or
+ *                 MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE, or
+ *                 MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED (see below), or
+ *                 a specific SSL error code.
  *
- * \note           If this function returns non-zero, then the ssl context
+ * \note           If this function returns something other than 0 or
+ *                 MBEDTLS_ERR_SSL_WANT_READ/WRITE, then the ssl context
  *                 becomes unusable, and you should either free it or call
  *                 \c mbedtls_ssl_session_reset() on it before re-using it.
- *                 If DTLS is in use, then you may choose to handle
+ *
+ * \note           If DTLS is in use, then you may choose to handle
  *                 MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED specially for logging
- *                 purposes, but you still need to reset/free the context.
+ *                 purposes, as it is an expected return value rather than an
+ *                 actual error, but you still need to reset/free the context.
  */
 int mbedtls_ssl_handshake( mbedtls_ssl_context *ssl );
 
 /**
  * \brief          Perform a single step of the SSL handshake
  *
- *                 Note: the state of the context (ssl->state) will be at
+ * \note           The state of the context (ssl->state) will be at
  *                 the following state after execution of this function.
  *                 Do not call this function if state is MBEDTLS_SSL_HANDSHAKE_OVER.
  *
  * \param ssl      SSL context
  *
- * \return         0 if successful, MBEDTLS_ERR_SSL_WANT_READ,
- *                 MBEDTLS_ERR_SSL_WANT_WRITE, or a specific SSL error code.
+ * \return         0 if successful, or
+ *                 MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE, or
+ *                 a specific SSL error code.
  */
 int mbedtls_ssl_handshake_step( mbedtls_ssl_context *ssl );
 
@@ -2117,31 +2152,54 @@ int mbedtls_ssl_renegotiate( mbedtls_ssl_context *ssl );
  *
  * \return         the number of bytes read, or
  *                 0 for EOF, or
- *                 a negative error code.
+ *                 MBEDTLS_ERR_SSL_WANT_READ or MBEDTLS_ERR_SSL_WANT_WRITE, or
+ *                 MBEDTLS_ERR_SSL_CLIENT_RECONNECT (see below), or
+ *                 another negative error code.
+ *
+ * \note           When this function return MBEDTLS_ERR_SSL_CLIENT_RECONNECT
+ *                 (which can only happen server-side), it means that a client
+ *                 is initiating a new connection using the same source port.
+ *                 You can either treat that as a connection close and wait
+ *                 for the client to resend a ClientHello, or directly
+ *                 continue with \c mbedtls_ssl_handshake() with the same
+ *                 context (as it has beeen reset internally). Either way, you
+ *                 should make sure this is seen by the application as a new
+ *                 connection: application state, if any, should be reset, and
+ *                 most importantly the identity of the client must be checked
+ *                 again. WARNING: not validating the identity of the client
+ *                 again, or not transmitting the new identity to the
+ *                 application layer, would allow authentication bypass!
  */
 int mbedtls_ssl_read( mbedtls_ssl_context *ssl, unsigned char *buf, size_t len );
 
 /**
- * \brief          Write exactly 'len' application data bytes
+ * \brief          Try to write exactly 'len' application data bytes
+ *
+ * \warning        This function will do partial writes in some cases. If the
+ *                 return value is non-negative but less than length, the
+ *                 function must be called again with updated arguments:
+ *                 buf + ret, len - ret (if ret is the return value) until
+ *                 it returns a value equal to the last 'len' argument.
  *
  * \param ssl      SSL context
  * \param buf      buffer holding the data
  * \param len      how many bytes must be written
  *
- * \return         the number of bytes written,
- *                 or a negative error code.
+ * \return         the number of bytes actually written (may be less than len),
+ *                 or MBEDTLS_ERR_SSL_WANT_WRITE of MBEDTLS_ERR_SSL_WANT_READ,
+ *                 or another negative error code.
  *
- * \note           When this function returns MBEDTLS_ERR_SSL_WANT_WRITE,
+ * \note           When this function returns MBEDTLS_ERR_SSL_WANT_WRITE/READ,
  *                 it must be called later with the *same* arguments,
  *                 until it returns a positive value.
  *
  * \note           If the requested length is greater than the maximum
  *                 fragment length (either the built-in limit or the one set
  *                 or negotiated with the peer), then:
- *                 - with TLS, less bytes than requested are written. (In
- *                 order to write larger messages, this function should be
- *                 called in a loop.)
+ *                 - with TLS, less bytes than requested are written.
  *                 - with DTLS, MBEDTLS_ERR_SSL_BAD_INPUT_DATA is returned.
+ *                 \c mbedtls_ssl_get_max_frag_len() may be used to query the
+ *                 active maximum fragment length.
  */
 int mbedtls_ssl_write( mbedtls_ssl_context *ssl, const unsigned char *buf, size_t len );
 

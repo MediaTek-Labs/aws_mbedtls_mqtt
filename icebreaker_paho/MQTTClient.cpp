@@ -401,7 +401,6 @@ exit:
 }
 
 
-//int MQTTSubscribe(Client* c, const char* topicFilter, enum QoS qos, messageHandler messageHandler, pApplicationHandler_t applicationHandler)
 int MQTTSubscribe(Client* c, const char* topicFilter, int qos, messageHandler messageHandler, pApplicationHandler_t applicationHandler)
 { 
     int rc = FAILURE;  

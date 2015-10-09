@@ -41,12 +41,12 @@
 #include <LWiFiClient.h>
 
 /* change Wifi settings here */
-#define WIFI_AP "MUS"
-#define WIFI_PASSWORD "mediatekmus"
+#define WIFI_AP "mtktest"
+#define WIFI_PASSWORD "bslp6173"
 #define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
 
 /* change server settings here */
-VMSTR IP_ADDRESS = "107.23.31.248"; //currently only support IP address
+VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
 VMINT PORT = 8883;
 int numPubs = 5;
 char cafileName[] = "G5.pem";

@@ -46,7 +46,7 @@ void pahoMessageCallback(MessageData* md) {
 		params.MessageParams.PayloadLen = message->payloadlen & GETLOWER4BYTES;
 		params.MessageParams.pPayload = (char*) message->payload;
 		params.MessageParams.isDuplicate = message->dup;
-		//params.MessageParams.qos = message->qos;
+		params.MessageParams.qos = (QoSLevel)message->qos;
 		params.MessageParams.isRetained = message->retained;
 		params.MessageParams.id = message->id;
 	}
@@ -133,7 +133,10 @@ IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	//change qos to 0 here
-	if (0 != MQTTSubscribe(&c, pParams->pTopic, pParams->qos, pahoMessageCallback, (void (*)(void))(pParams->mHandler))) {
+	// if (0 != MQTTSubscribe(&c, pParams->pTopic, (QoS)pParams->qos, pahoMessageCallback, (void (*)(void))(pParams->mHandler))) {
+	// 		rc = SUBSCRIBE_ERROR;
+	// }
+	if (0 != MQTTSubscribe(&c, pParams->pTopic, 0, pahoMessageCallback, (void (*)(void))(pParams->mHandler))) {
 			rc = SUBSCRIBE_ERROR;
 	}
 	return rc;
@@ -147,7 +150,7 @@ IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams) {
 	Message.id = pParams->MessageParams.id;
 	Message.payload = pParams->MessageParams.pPayload;
 	Message.payloadlen = pParams->MessageParams.PayloadLen;
-	//Message.qos = pParams->MessageParams.qos;
+	Message.qos = (QoS)pParams->MessageParams.qos;
 	Message.retained = pParams->MessageParams.isRetained;
 
 	if(0 != MQTTPublish(&c, pParams->pTopic, &Message)){

@@ -31,13 +31,14 @@
 #ifdef connect
 #undef connect
 #endif
+
 #include <LTask.h>
 #include <LWiFi.h>
 #include <LWiFiClient.h>
 
 /* change Wifi settings here */
-#define WIFI_AP "MUS"
-#define WIFI_PASSWORD "mediatekmus"
+#define WIFI_AP "mtktest"
+#define WIFI_PASSWORD "bslp6173"
 #define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
 
 /* change server settings here */

@@ -3,24 +3,25 @@
  *
  * \brief Configuration options (set of defines)
  *
- *  Copyright (C) 2006-2014, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  SPDX-License-Identifier: Apache-2.0
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
+ */
+
+/*
  * This set of compile-time options may be used to enable
  * or disable features selectively, and reduce the global
  * memory footprint.
@@ -1134,6 +1135,22 @@
 #define MBEDTLS_SSL_DTLS_HELLO_VERIFY
 
 /**
+ * \def MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE
+ *
+ * Enable server-side support for clients that reconnect from the same port.
+ *
+ * Some clients unexpectedly close the connection and try to reconnect using the
+ * same source port. This needs special support from the server to handle the
+ * new connection securely, as described in section 4.2.8 of RFC 6347. This
+ * flag enables that support.
+ *
+ * Requires: MBEDTLS_SSL_DTLS_HELLO_VERIFY
+ *
+ * Comment this to disable support for clients reusing the source port.
+ */
+#define MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE
+
+/**
  * \def MBEDTLS_SSL_DTLS_BADMAC_LIMIT
  *
  * Enable support for a limit of records with bad MAC.
@@ -1228,6 +1245,8 @@
  *
  * If set, the X509 parser will not break-off when parsing an X509 certificate
  * and encountering an unknown critical extension.
+ *
+ * \warning Depending on your PKI use, enabling this can be a security risk!
  *
  * Uncomment to prevent an error.
  */
@@ -2397,7 +2416,7 @@
 //#define MBEDTLS_SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
-//#define MBEDTLS_SSL_MAX_CONTENT_LEN             16384 /**< Size of the input / output buffer */
+//#define MBEDTLS_SSL_MAX_CONTENT_LEN             16384 /**< Maxium fragment length in bytes, determines the size of each of the two internal I/O buffers */
 //#define MBEDTLS_SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 //#define MBEDTLS_SSL_COOKIE_TIMEOUT        60 /**< Default expiration delay of DTLS cookies, in seconds if HAVE_TIME, or in number of cookies issued */
@@ -2420,6 +2439,23 @@
 //#define MBEDTLS_X509_MAX_INTERMEDIATE_CA   8   /**< Maximum number of intermediate CAs in a verification chain. */
 
 /* \} name SECTION: Module configuration options */
+
+#if defined(TARGET_LIKE_MBED)
+#include "mbedtls/target_config.h"
+#endif
+
+/*
+ * Allow user to override any previous default.
+ *
+ * Use two macro names for that, as:
+ * - with yotta the prefix YOTTA_CFG_ is forced
+ * - without yotta is looks weird to have a YOTTA prefix.
+ */
+#if defined(YOTTA_CFG_MBEDTLS_USER_CONFIG_FILE)
+#include YOTTA_CFG_MBEDTLS_USER_CONFIG_FILE
+#elif defined(MBEDTLS_USER_CONFIG_FILE)
+#include MBEDTLS_USER_CONFIG_FILE
+#endif
 
 #include "check_config.h"
 
