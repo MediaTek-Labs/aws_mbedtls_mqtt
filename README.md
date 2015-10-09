@@ -1,4 +1,4 @@
-This reporsitory contains a port of the mbed TSL library for use in LinkIt ONE applications to enable connectivity to AWS IoT services using the MQTT protocol.
+This reporsitory contains a port of the mbed TLS library for use in LinkIt ONE applications to enable connectivity to AWS IoT services using the MQTT protocol.
 
 For details on getting started please visit: https://labs.mediatek.com/site/global/developer_tools/mediatek_linkit/get-started/aws/introduction/index.gsp
 
