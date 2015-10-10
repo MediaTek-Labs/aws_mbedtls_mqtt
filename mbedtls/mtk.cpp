@@ -12,10 +12,6 @@ int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, const char 
 unsigned char buf[1024];
 //const char *pers = "WifiWebClient";
 // path to certification file
-int read_time;
-VMSTR cert_path;
-VMSTR crt_p;
-VMSTR key_p;
 
 const char* CONNECT_IP_ADDRESS;
 VMINT CONNECT_PORT;

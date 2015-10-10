@@ -58,9 +58,6 @@ char HostAddress[255] = "data.iot.us-east-1.amazonaws.com";
 uint16_t port = 8883;
 uint32_t publishCount = 0;
 LWiFiClient c;
-VMSTR ca_path = cafileName;
-VMSTR crt_file = clientCRTName;
-VMSTR key_file = clientKeyName;
 
 int32_t MQTTcallbackHandler(MQTTCallbackParams params) {
 
@@ -195,12 +192,7 @@ void setup()
     delay(1000);
   }
   Serial.println("ok");
-  
-  read_time = 0;
 
-  cert_path = ca_path;
-  crt_p = crt_file;
-  key_p = key_file;
   CONNECT_IP_ADDRESS = IP_ADDRESS;
   CONNECT_PORT = PORT;
   

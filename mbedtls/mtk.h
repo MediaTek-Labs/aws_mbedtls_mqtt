@@ -25,11 +25,6 @@ extern int mbedtls_net_connect( mbedtls_net_context *ctx, const char *host, cons
 extern unsigned char buf[1024];
 //extern const char *pers;
 
-extern int read_time;
-extern VMSTR cert_path;
-extern VMSTR crt_p;
-extern VMSTR key_p;
-
 extern void myprint(char *str);
 extern void myprintln(char *str);
 

@@ -91,7 +91,7 @@ int mbedtls_pk_load_file( const char *path, unsigned char **buf, size_t *n )
 
     VM_FS_HANDLE file_handle;
     VMWCHAR file_name[100 + 1];
-    VMSTR cert_paths[1];
+    VMSTR cert_paths[2];
     
     VMUINT8* cert_buffer;
     VMUINT read_size;
@@ -99,35 +99,11 @@ int mbedtls_pk_load_file( const char *path, unsigned char **buf, size_t *n )
     VMWCHAR wpath[FILE_PATH_SIZE] = {0};
     VMCHAR path_cert[FILE_PATH_SIZE] = {0};
 
-    //drv = vm_get_removable_driver() > 0 ? vm_get_removeable_driver() : vm_get_system_driver();
+    cert_paths[0] = (VMSTR)path;
 
-    //cert_drv = drv;
-
-    //cert_paths[0] = path;
-
-    //cert_paths[0] = "C:\\facebookcert.cer";
-    //cert_paths[0] = *path;
-
-    //drv = vm_get_removable_driver() > 0 ? vm_get_removeable_driver() : vm_get_system_driver();
-    
-    //vm_sprintf(cert_paths[0], "%c:\\%s", drv, path);
-
-    // vm_gb2312_to_ucs2(wpath, sizeof(wpath), path); 
     memset(file_name, 0, sizeof(file_name));
 
-    if (read_time == 0){
-        vm_ascii_to_ucs2(file_name, SSL_CERT_PATH_MAX_LENGTH, cert_path);
-        read_time = 1;
-    }
-    else if (read_time == 1){
-        read_time = 2;
-        vm_ascii_to_ucs2(file_name, SSL_CERT_PATH_MAX_LENGTH, crt_p);
-        
-    }
-    else{
-        vm_ascii_to_ucs2(file_name, SSL_CERT_PATH_MAX_LENGTH, key_p);
-        read_time = 3;
-    }
+    vm_ascii_to_ucs2(file_name, SSL_CERT_PATH_MAX_LENGTH, cert_paths[0]);
 
     file_handle = vm_file_open(file_name, MODE_READ, VM_TRUE);
 

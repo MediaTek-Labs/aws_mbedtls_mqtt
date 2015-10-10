@@ -87,9 +87,6 @@ uint16_t pubcnt = 0;
 uint8_t tempSensorIndex = 0;
 
 LWiFiClient c;
-VMSTR ca_path = cafileName;
-VMSTR crt_file = clientCRTName;
-VMSTR key_file = clientKeyName;
 
 typedef struct {
   double temperature;
@@ -274,12 +271,7 @@ void setup()
   }
   
   Serial.println("ok");
-  
-  read_time = 0;
-
-  cert_path = ca_path;
-  crt_p = crt_file;
-  key_p = key_file;
+ 
   CONNECT_IP_ADDRESS = IP_ADDRESS;
   CONNECT_PORT = PORT;
   
