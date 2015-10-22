@@ -27,9 +27,10 @@
 #define AWS_IOT_MQTT_PORT              8883 ///< default port for MQTT/S
 #define AWS_IOT_MQTT_CLIENT_ID         "LinkitOne" ///< MQTT client ID should be unique for every device
 #define AWS_IOT_MY_THING_NAME 	       "mtk_aws_1" ///< Thing Name of the Shadow this device is associated with
-#define AWS_IOT_ROOT_CA_FILENAME       "G5.pem" ///< Root CA file name
+#define AWS_IOT_ROOT_CA_FILENAME       "root.pem" ///< Root CA file name
 #define AWS_IOT_CERTIFICATE_FILENAME   "cert.pem" ///< device signed certificate file name
 #define AWS_IOT_PRIVATE_KEY_FILENAME   "privatekey.pem" ///< Device private key filename
+#define AWS_IOT_TOPIC_NAME             "mtk_test" //AWS policy name
 // =================================================
 
 #endif /* SRC_SHADOW_IOT_SHADOW_CONFIG_H_ */

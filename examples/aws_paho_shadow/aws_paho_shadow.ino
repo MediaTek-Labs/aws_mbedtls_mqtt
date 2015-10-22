@@ -45,13 +45,6 @@
 #define WIFI_PASSWORD "bslp6173"
 #define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
 
-/* change server settings here */
-VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
-char cafileName[] = "G5.pem";
-char clientCRTName[] = "cert.pem";
-char clientKeyName[] = "privatekey.pem";
-VMSTR thingName = "mtktest2";
-/* end of user settings */
 
 #define ROOMTEMPERATURE_UPPERLIMIT 32.0f
 #define ROOMTEMPERATURE_LOWERLIMIT 25.0f
@@ -216,13 +209,15 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 			windowOpen = true;
                 rc = aws_iot_shadow_init_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
                 if (rc == NONE_ERROR) {
-		  rc = aws_iot_shadow_add_reported(JsonDocumentBuffer, 2, &temperatureHandler, &windowActuator);
+		  rc = aws_iot_shadow_add_reported(JsonDocumentBuffer, sizeOfJsonDocumentBuffer, 2, &temperatureHandler,
+					&windowActuator);
 		  if (rc == NONE_ERROR) {
-			rc = aws_iot_finalize_json_document(JsonDocumentBuffer);
+			rc = aws_iot_finalize_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
                         if (rc == NONE_ERROR){
 			    Serial.print("Update Shadow: ");
                             Serial.println(JsonDocumentBuffer);
-		            rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback, NULL, 4, true);
+		            rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback,
+					NULL, 4, true);
                         }
 		  }
                 }
