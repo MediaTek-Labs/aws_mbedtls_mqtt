@@ -13,18 +13,20 @@
  * permissions and limitations under the License.
  */
 
-#include "iot_shadow_records.h"
+#include "aws_iot_shadow_records.h"
+
 #include <string.h>
 #include <stdio.h>
-#include "json_utils.h"
+
 #include "timer_interface.h"
-#include "iot_log.h"
-#include "iot_shadow_config.h"
-#include "iot_shadow_json.h"
+#include "aws_iot_json_utils.h"
+#include "aws_iot_log.h"
+#include "aws_iot_shadow_json.h"
+#include "aws_iot_config.h"
 
 typedef struct {
 	char clientTokenID[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
-	char thingName[MAX_SIZE_OF_THINGNAME];
+	char thingName[MAX_SIZE_OF_THING_NAME];
 	ShadowActions_t action;
 	fpActionCallback_t callback;
 	void *pCallbackContext;
@@ -54,11 +56,12 @@ ToBeReceivedAckRecord_t AckWaitList[MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME];
 
 MQTTClient_t *pMqttClient;
 
-#define SHADOW_DELTA_TOPIC_WITH_THING_NAME "$aws/things/" MY_THING_NAME "/shadow/update/delta"
+#define SHADOW_DELTA_TOPIC_WITH_THING_NAME "$aws/things/" AWS_IOT_MY_THING_NAME "/shadow/update/delta"
 
 #define MAX_TOPICS_AT_ANY_GIVEN_TIME 2*MAX_THINGNAME_HANDLED_AT_ANY_GIVEN_TIME
 SubscriptionRecord_t SubscriptionList[MAX_TOPICS_AT_ANY_GIVEN_TIME];
 
+#define SUBSCRIBE_SETTLING_TIME 2
 char shadowRxBuf[SHADOW_MAX_SIZE_OF_RX_BUFFER];
 
 static JsonTokenTable_t tokenTable[MAX_JSON_TOKEN_EXPECTED];
@@ -150,7 +153,7 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 }
 
 static bool isAckForMyThingName(const char *pTopicName) {
-	if (strstr(pTopicName, MY_THING_NAME) != NULL) {
+	if (strstr(pTopicName, AWS_IOT_MY_THING_NAME) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
 	return false;
@@ -303,7 +306,7 @@ bool isSubscriptionPresent(const char *pThingName, ShadowActions_t action) {
 
 IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t action, bool isSticky) {
 	IoT_Error_t ret_val = NONE_ERROR;
-	MQTTSubscribeParams subParams;
+	MQTTSubscribeParams subParams = MQTTSubscribeParamsDefault;
 
 	bool clearBothEntriesFromList = true;
 	int16_t indexAcceptedSubList = 0;
@@ -328,6 +331,13 @@ IoT_Error_t subscribeToShadowActionAcks(const char *pThingName, ShadowActions_t 
 				SubscriptionList[indexRejectedSubList].count = 1;
 				SubscriptionList[indexRejectedSubList].isSticky = isSticky;
 				clearBothEntriesFromList = false;
+
+				// wait for SUBSCRIBE_SETTLING_TIME seconds to let the subscription take effect
+				Timer subSettlingtimer;
+				InitTimer(&subSettlingtimer);
+				countdown(&subSettlingtimer, SUBSCRIBE_SETTLING_TIME);
+				while(!expired(&subSettlingtimer));
+
 			}
 		}
 	}
@@ -369,9 +379,9 @@ IoT_Error_t publishToShadowAction(const char * pThingName, ShadowActions_t actio
 	char TemporaryTopicName[MAX_SHADOW_TOPIC_LENGTH_BYTES];
 	topicNameFromThingAndAction(TemporaryTopicName, pThingName, action, SHADOW_ACTION);
 
-	MQTTPublishParams pubParams;
+	MQTTPublishParams pubParams = MQTTPublishParamsDefault;
 	pubParams.pTopic = TemporaryTopicName;
-	MQTTMessageParams msgParams;
+	MQTTMessageParams msgParams = MQTTMessageParamsDefault;
 	msgParams.qos = QOS_0;
 	msgParams.PayloadLen = strlen(pJsonDocumentToBeSent) + 1;
 	msgParams.pPayload = (char *) pJsonDocumentToBeSent;
@@ -399,11 +409,11 @@ void addToAckWaitList(uint8_t indexAckWaitList, const char *pThingName, ShadowAc
 		uint32_t timeout_seconds) {
 	AckWaitList[indexAckWaitList].callback = callback;
 	strncpy(AckWaitList[indexAckWaitList].clientTokenID, pExtractedClientToken, MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE);
-	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THINGNAME);
+	strncpy(AckWaitList[indexAckWaitList].thingName, pThingName, MAX_SIZE_OF_THING_NAME);
 	AckWaitList[indexAckWaitList].pCallbackContext = pCallbackContext;
 	AckWaitList[indexAckWaitList].action = action;
-	// InitTimer(&(AckWaitList[indexAckWaitList].timer));
-	// countdown(&(AckWaitList[indexAckWaitList].timer), timeout_seconds);
+	InitTimer(&(AckWaitList[indexAckWaitList].timer));
+	countdown(&(AckWaitList[indexAckWaitList].timer), timeout_seconds);
 	AckWaitList[indexAckWaitList].isFree = false;
 }
 
@@ -411,14 +421,14 @@ void HandleExpiredResponseCallbacks(void) {
 	uint8_t i;
 	for (i = 0; i < MAX_ACKS_TO_COMEIN_AT_ANY_GIVEN_TIME; i++) {
 		if (!AckWaitList[i].isFree) {
-			//if (expired(&(AckWaitList[i].timer))) {
+			if (expired(&(AckWaitList[i].timer))) {
 				if (AckWaitList[i].callback != NULL) {
 					AckWaitList[i].callback(AckWaitList[i].thingName, AckWaitList[i].action, SHADOW_ACK_TIMEOUT,
 							shadowRxBuf, AckWaitList[i].pCallbackContext);
 				}
 				AckWaitList[i].isFree = true;
 				unsubscribeFromAcceptedAndRejected(i);
-			//}
+			}
 		}
 	}
 }
@@ -448,8 +458,9 @@ static int32_t shadow_delta_callback(MQTTCallbackParams params) {
 		if (extractVersionNumber(shadowRxBuf, pJsonHandler, tokenCount, &tempVersionNumber)) {
 			if (tempVersionNumber > shadowJsonVersionNum) {
 				shadowJsonVersionNum = tempVersionNumber;
+				DEBUG("New Version number: %d", shadowJsonVersionNum);
 			} else {
-				WARN("Old Delta Message received - Ignoring a: %d c: %d", tempVersionNumber, shadowJsonVersionNum);
+				WARN("Old Delta Message received - Ignoring rx: %d local: %d", tempVersionNumber, shadowJsonVersionNum);
 				return GENERIC_ERROR;
 			}
 		}

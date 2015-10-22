@@ -14,7 +14,7 @@
  */
 
 /**
- * @file iot_error.h
+ * @file aws_iot_error.h
  * @brief Definition of error types for the SDK.
  */
 
@@ -48,7 +48,9 @@ typedef enum {
 	WAIT_FOR_PUBLISH = -17,				/** Shadow: The response Ack table is currently full waiting for previously published updates */
 	SSL_WRITE_TIMEOUT_ERROR = -18, 		/** SSL Write times out */
 	SSL_READ_TIMEOUT_ERROR = -19, 		/** SSL Read times out */
-	SSL_READ_ERROR = -20				/** A Generic error based on the platform used */
+	SSL_READ_ERROR = -20,				/** A Generic error based on the platform used */
+	SHADOW_JSON_BUFFER_TRUNCATED = -21,  /** Any time an snprintf writes more than size value, this error will be returned */
+	SHADOW_JSON_ERROR = -22  /** Any time an snprintf encounters an encoding error or not enough space in the given buffer */
 }IoT_Error_t;
 
 #endif /* AWS_IOT_SDK_SRC_IOT_ERROR_H_ */

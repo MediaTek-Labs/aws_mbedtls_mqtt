@@ -14,7 +14,7 @@
  */
 
 /**
- * @file iot_version.h
+ * @file aws_iot_version.h
  * @brief Constants defining the release version of the SDK.
  *
  * This file contains constants defining the release version of the SDK.
@@ -25,17 +25,17 @@
  * Versioning of the SDK follows the MAJOR.MINOR.PATCH Semantic Versioning guidelines.
  * @see http://semver.org/
  */
-#ifndef SRC_UTILS_IOT_VERSION_H_
-#define SRC_UTILS_IOT_VERSION_H_
+#ifndef SRC_UTILS_AWS_IOT_VERSION_H_
+#define SRC_UTILS_AWS_IOT_VERSION_H_
 
 /**
  * @brief MAJOR version, incremented when incompatible API changes are made.
  */
-#define VERSION_MAJOR 0
+#define VERSION_MAJOR 1
 /**
  * @brief MINOR version when functionality is added in a backwards-compatible manner.
  */
-#define VERSION_MINOR 3
+#define VERSION_MINOR 0
 /**
  * @brief PATCH version when backwards-compatible bug fixes are made.
  */
@@ -43,6 +43,6 @@
 /**
  * @brief TAG is an (optional) tag appended to the version if a more descriptive verion is needed.
  */
-#define VERSION_TAG "BETA"
+#define VERSION_TAG ""
 
-#endif /* SRC_UTILS_IOT_VERSION_H_ */
+#endif /* SRC_UTILS_AWS_IOT_VERSION_H_ */

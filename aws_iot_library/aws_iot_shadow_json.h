@@ -17,9 +17,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "iot_error.h"
 #include <stdarg.h>
-#include "iot_shadow_json_data.h"
+
+#include "aws_iot_error.h"
+#include "aws_iot_shadow_json_data.h"
 
 
 bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount);

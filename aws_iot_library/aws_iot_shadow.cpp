@@ -13,32 +13,40 @@
  * permissions and limitations under the License.
  */
 
-#include "iot_shadow_actions.h"
-#include "iot_shadow_records.h"
-#include "iot_error.h"
-#include "iot_log.h"
-#include "iot_shadow_key.h"
-#include "iot_shadow_json.h"
+#include "aws_iot_error.h"
+#include "aws_iot_log.h"
+#include "aws_iot_shadow_actions.h"
+#include "aws_iot_shadow_json.h"
+#include "aws_iot_shadow_key.h"
+#include "aws_iot_shadow_records.h"
 
-#define GET_REQUEST_JSON "{\"clientToken\":\"" UNIQUE_CLIENT_TOKEN "-0\"}"
+const ShadowParameters_t ShadowParametersDefault = {
+		.pMyThingName = AWS_IOT_MY_THING_NAME,
+		.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID,
+		.pHost = AWS_IOT_MQTT_HOST,
+		.port = AWS_IOT_MQTT_PORT,
+		.pRootCA = NULL,
+		.pClientCRT = NULL,
+		.pClientKey = NULL
+};
 
-void iot_shadow_reset_last_received_version(void) {
+void aws_iot_shadow_reset_last_received_version(void) {
 	shadowJsonVersionNum = 0;
 }
 
-uint32_t iot_shadow_get_last_received_version(void) {
+uint32_t aws_iot_shadow_get_last_received_version(void) {
 	return shadowJsonVersionNum;
 }
 
-void iot_shadow_enable_discard_old_delta_msgs(void) {
+void aws_iot_shadow_enable_discard_old_delta_msgs(void) {
 	shadowDiscardOldDeltaFlag = true;
 }
 
-void iot_shadow_disable_discard_old_delta_msgs(void) {
+void aws_iot_shadow_disable_discard_old_delta_msgs(void) {
 	shadowDiscardOldDeltaFlag = false;
 }
 
-IoT_Error_t iot_shadow_init(MQTTClient_t *pClient) {
+IoT_Error_t aws_iot_shadow_init(MQTTClient_t *pClient) {
 
 	IoT_Error_t rc = NONE_ERROR;
 
@@ -47,13 +55,14 @@ IoT_Error_t iot_shadow_init(MQTTClient_t *pClient) {
 	}
 
 	resetClientTokenSequenceNum();
+	aws_iot_shadow_reset_last_received_version();
 	initDeltaTokens();
 	return NONE_ERROR;
 }
 
-IoT_Error_t iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pParams) {
+IoT_Error_t aws_iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
-	MQTTConnectParams ConnectParams;
+	MQTTConnectParams ConnectParams = MQTTConnectParamsDefault;
 	if (pClient == NULL) {
 		return NULL_VALUE_ERROR;
 	}
@@ -69,7 +78,7 @@ IoT_Error_t iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pParam
 	ConnectParams.isCleansession = true;
 	ConnectParams.isSSLHostnameVerify = true;
 	ConnectParams.isWillMsgPresent = false;
-	ConnectParams.pClientID = pParams->pUniqueThingId;
+	ConnectParams.pClientID = pParams->pMqttClientId;
 	ConnectParams.pDeviceCertLocation = pParams->pClientCRT;
 	ConnectParams.pDevicePrivateKeyLocation = pParams->pClientKey;
 	ConnectParams.pRootCALocation = pParams->pRootCA;
@@ -77,6 +86,7 @@ IoT_Error_t iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pParam
 	ConnectParams.pUserName = NULL;
 	ConnectParams.pHostURL = pParams->pHost;
 	ConnectParams.port = pParams->port;
+	ConnectParams.disconnectHandler = NULL;
 
 	rc = pClient->connect(&ConnectParams);
 
@@ -87,7 +97,7 @@ IoT_Error_t iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pParam
 	return rc;
 }
 
-IoT_Error_t iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *pStruct) {
+IoT_Error_t aws_iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *pStruct) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	if (!(pClient->isConnected())) {
@@ -99,16 +109,16 @@ IoT_Error_t iot_shadow_register_delta(MQTTClient_t *pClient, jsonStruct_t *pStru
 	return rc;
 }
 
-IoT_Error_t iot_shadow_yield(MQTTClient_t *pClient, int timeout) {
+IoT_Error_t aws_iot_shadow_yield(MQTTClient_t *pClient, int timeout) {
 	HandleExpiredResponseCallbacks();
 	return pClient->yield(timeout);
 }
 
-IoT_Error_t iot_shadow_disconnect(MQTTClient_t *pClient) {
+IoT_Error_t aws_iot_shadow_disconnect(MQTTClient_t *pClient) {
 	return pClient->disconnect();
 }
 
-IoT_Error_t iot_shadow_update(MQTTClient_t *pClient, const char *pThingName, char *pJsonString,
+IoT_Error_t aws_iot_shadow_update(MQTTClient_t *pClient, const char *pThingName, char *pJsonString,
 		fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 
 	IoT_Error_t ret_val = NONE_ERROR;
@@ -123,7 +133,7 @@ IoT_Error_t iot_shadow_update(MQTTClient_t *pClient, const char *pThingName, cha
 	return ret_val;
 }
 
-IoT_Error_t iot_shadow_delete(MQTTClient_t *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_delete(MQTTClient_t *pClient, const char *pThingName, fpActionCallback_t callback,
 		void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 	IoT_Error_t ret_val = NONE_ERROR;
 
@@ -133,13 +143,13 @@ IoT_Error_t iot_shadow_delete(MQTTClient_t *pClient, const char *pThingName, fpA
 
 	char deleteRequestJsonBuf[MAX_SIZE_CLIENT_TOKEN_CLIENT_SEQUENCE];
 	iot_shadow_delete_request_json(deleteRequestJsonBuf);
-	ret_val = iot_shadow_action(pClient, pThingName, SHADOW_GET, deleteRequestJsonBuf, callback, pContextData,
+	ret_val = iot_shadow_action(pClient, pThingName, SHADOW_DELETE, deleteRequestJsonBuf, callback, pContextData,
 			timeout_seconds, isPersistentSubscribe);
 
 	return ret_val;
 }
 
-IoT_Error_t iot_shadow_get(MQTTClient_t *pClient, const char *pThingName, fpActionCallback_t callback,
+IoT_Error_t aws_iot_shadow_get(MQTTClient_t *pClient, const char *pThingName, fpActionCallback_t callback,
 		void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 
 	IoT_Error_t ret_val = NONE_ERROR;

@@ -25,13 +25,13 @@
 
 #include <signal.h>
 #include <limits.h>
-#include "mqtt_interface.h"
-#include "iot_version.h"
-#include "iot_shadow.h"
-#include "iot_shadow_json_data.h"
-#include "iot_shadow_config.h"
-#include "json_utils.h"
-#include "iot_log.h"
+#include "aws_iot_mqtt_interface.h"
+#include "aws_iot_version.h"
+#include "aws_iot_shadow_interface.h"
+#include "aws_iot_shadow_json_data.h"
+#include "aws_iot_json_utils.h"
+#include "aws_iot_log.h"
+#include "aws_mtk_iot_config.h"
 
 #ifdef connect
 #undef connect
@@ -47,8 +47,6 @@
 
 /* change server settings here */
 VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
-VMINT PORT = 8883;
-int numPubs = 5;
 char cafileName[] = "G5.pem";
 char clientCRTName[] = "cert.pem";
 char clientKeyName[] = "privatekey.pem";
@@ -77,8 +75,9 @@ bool infinitePublishFlag;
 char cPayload[100];
 int32_t i;
 IoT_Error_t rc;
-char HostAddress[255] = "data.iot.us-east-1.amazonaws.com";
-uint16_t port = 8883;
+char HostAddress[255] = AWS_IOT_MQTT_HOST;
+VMINT port = AWS_IOT_MQTT_PORT;
+uint8_t numPubs = 5;
 uint32_t publishCount = 0;
 double tempSensor[] = {73.1, 71.2, 68.7, 70.1, 75.4};
 int test = 0;
@@ -131,11 +130,12 @@ MQTTClient_t mqttClient;
 char *pJsonStringToUpdate;
 float temperature = 0.0;
 char JsonDocumentBuffer[MAX_LENGTH_OF_UPDATE_JSON_BUFFER];
+size_t sizeOfJsonDocumentBuffer;
 
 bool windowOpen = false;
 jsonStruct_t windowActuator;
-
 jsonStruct_t temperatureHandler;
+ShadowParameters_t sp;
 
 // invoked in main thread context
 void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *user_data)
@@ -155,7 +155,9 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               rc = NONE_ERROR;
               i = 0;
               
-	      iot_mqtt_init(&mqttClient);
+	      aws_iot_mqtt_init(&mqttClient);
+
+              sizeOfJsonDocumentBuffer = sizeof(JsonDocumentBuffer) / sizeof(JsonDocumentBuffer[0]);
 
               windowActuator.cb = windowActuate_Callback;
               windowActuator.pData = &windowOpen;
@@ -168,8 +170,9 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               temperatureHandler.type = SHADOW_JSON_FLOAT;
 
 
-              ShadowParameters_t sp;
-	      sp.pUniqueThingId = thingName;
+              sp = ShadowParametersDefault;
+	      sp.pMyThingName = AWS_IOT_MY_THING_NAME;
+              sp.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
 	      sp.pHost = HostAddress;
 	      sp.port = port;
 	      sp.pClientCRT = clientCRTName;
@@ -177,19 +180,19 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 	      sp.pRootCA = cafileName;
   
               Serial.print("  . Shadow Init... ");
-              rc = iot_shadow_init(&mqttClient);
+              rc = aws_iot_shadow_init(&mqttClient);
               if (NONE_ERROR != rc) {
                 Serial.println("Error in connecting...");
               }
               Serial.println("ok");
               
-              rc = iot_shadow_connect(&mqttClient, &sp);
+              rc = aws_iot_shadow_connect(&mqttClient, &sp);
 
 	      if (NONE_ERROR != rc) {
 		Serial.println("Shadow Connection Error");
 	      }
 
-              rc = iot_shadow_register_delta(&mqttClient, &windowActuator);
+              rc = aws_iot_shadow_register_delta(&mqttClient, &windowActuator);
               
               if (NONE_ERROR != rc) {
 		Serial.println("Shadow Register Delta Error");
@@ -198,7 +201,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               temperature = STARTING_ROOMTEMPERATURE;
               // loop and publish a change in temperature
 	      while (NONE_ERROR == rc) {
-		rc = iot_shadow_yield(&mqttClient, 2000);
+		rc = aws_iot_shadow_yield(&mqttClient, 2000);
 		delay(1000);
 		Serial.println("=======================================================================================");
 		Serial.print("On Device: window state ");
@@ -211,14 +214,18 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 
                 if (temperature > 20)
 			windowOpen = true;
-                iot_shadow_init_json_document(JsonDocumentBuffer);
-		rc = iot_shadow_add_reported(JsonDocumentBuffer, 2, &temperatureHandler, &windowActuator);
-		if (rc == NONE_ERROR) {
-			iot_finalize_json_document(JsonDocumentBuffer);
-			Serial.print("Update Shadow: ");
-                        Serial.println(JsonDocumentBuffer);
-		        rc = iot_shadow_update(&mqttClient, MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback, NULL, 4, true);
-		}
+                rc = aws_iot_shadow_init_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
+                if (rc == NONE_ERROR) {
+		  rc = aws_iot_shadow_add_reported(JsonDocumentBuffer, 2, &temperatureHandler, &windowActuator);
+		  if (rc == NONE_ERROR) {
+			rc = aws_iot_finalize_json_document(JsonDocumentBuffer);
+                        if (rc == NONE_ERROR){
+			    Serial.print("Update Shadow: ");
+                            Serial.println(JsonDocumentBuffer);
+		            rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback, NULL, 4, true);
+                        }
+		  }
+                }
 		Serial.println("*****************************************************************************************");
 	      }
 
@@ -227,7 +234,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 	      }
 
 	      Serial.println("Disconnecting");
-	      rc = iot_shadow_disconnect(&mqttClient);
+	      rc = aws_iot_shadow_disconnect(&mqttClient);
 
 	      if (NONE_ERROR != rc) {
 		ERROR("Disconnect error");
@@ -273,7 +280,7 @@ void setup()
   Serial.println("ok");
  
   CONNECT_IP_ADDRESS = IP_ADDRESS;
-  CONNECT_PORT = PORT;
+  CONNECT_PORT = port;
   
   LTask.remoteCall(bearer_open, NULL);
 }

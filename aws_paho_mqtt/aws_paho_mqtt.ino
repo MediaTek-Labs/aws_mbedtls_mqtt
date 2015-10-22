@@ -24,9 +24,10 @@
 
 #include <signal.h>
 #include <limits.h>
-#include "mqtt_interface.h"
-#include "iot_version.h"
-#include "iot_log.h"
+#include "aws_iot_mqtt_interface.h"
+#include "aws_iot_version.h"
+#include "aws_iot_log.h"
+#include "aws_mtk_iot_config.h"
 
 #ifdef connect
 #undef connect
@@ -43,21 +44,31 @@
 
 /* change server settings here */
 VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
-VMINT PORT = 8883;
-char cafileName[] = "G5.pem";
-char clientCRTName[] = "cert.pem";
-char clientKeyName[] = "privatekey.pem";
 /* end of user settings */
 
-QoSLevel qos = QOS_0;
+
+/**
+ * @brief Default MQTT HOST URL is pulled from the aws_iot_config.h
+ */
+char HostAddress[255] = AWS_IOT_MQTT_HOST;
+/**
+ * @brief Default MQTT port is pulled from the aws_iot_config.h
+ */
+VMINT port = AWS_IOT_MQTT_PORT;
+/**
+ * @brief This parameter will avoid infinite loop of publish and exit the program after certain number of publishes
+ */
+uint32_t publishCount = 0;
+
+char cafileName[] = AWS_IOT_ROOT_CA_FILENAME;
+char clientCRTName[] = AWS_IOT_CERTIFICATE_FILENAME;
+char clientKeyName[] = AWS_IOT_PRIVATE_KEY_FILENAME;
+
+LWiFiClient c;
 bool infinitePublishFlag;
 char cPayload[100];
 int32_t i;
 int rc;
-char HostAddress[255] = "data.iot.us-east-1.amazonaws.com";
-uint16_t port = 8883;
-uint32_t publishCount = 0;
-LWiFiClient c;
 
 int32_t MQTTcallbackHandler(MQTTCallbackParams params) {
 
@@ -75,6 +86,11 @@ int32_t MQTTcallbackHandler(MQTTCallbackParams params) {
 void disconnectCallbackHandler(void) {
 	Serial.println("MQTT Disconnect");
 }
+
+MQTTConnectParams connectParams;
+MQTTSubscribeParams subParams;
+MQTTMessageParams Msg;
+MQTTPublishParams Params;
 
 // invoked in main thread context
 void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *user_data)
@@ -95,7 +111,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               i = 0;
               infinitePublishFlag = true;
   
-              MQTTConnectParams connectParams;
+              connectParams = MQTTConnectParamsDefault;
   
               connectParams.KeepAliveInterval_sec = 10;
               connectParams.isCleansession = true;
@@ -104,8 +120,6 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               connectParams.pHostURL = HostAddress;
               connectParams.port = port;
               connectParams.isWillMsgPresent = false;
-              connectParams.pUserName = NULL;
-              connectParams.pPassword = NULL;
               connectParams.pRootCALocation = cafileName;
               connectParams.pDeviceCertLocation = clientCRTName;
               connectParams.pDevicePrivateKeyLocation = clientKeyName;
@@ -114,24 +128,25 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 	      connectParams.isSSLHostnameVerify = true;// ensure this is set to true for production
 	      connectParams.disconnectHandler = disconnectCallbackHandler;
   
-              rc = iot_mqtt_connect(&connectParams);
+              rc = aws_iot_mqtt_connect(&connectParams);
               if (NONE_ERROR != rc) {
-            Serial.println("Error in connecting...");
+                  Serial.println("Error in connecting...");
               }
   
-              MQTTSubscribeParams subParams;
+              subParams = MQTTSubscribeParamsDefault;
               subParams.mHandler = MQTTcallbackHandler;
               subParams.pTopic = "mtktestTopic5";
-              subParams.qos = qos;
+              subParams.qos = QOS_0;
+              
               if (NONE_ERROR == rc) {
-            Serial.print("Subscribing...");
-            rc = iot_mqtt_subscribe(&subParams);
-            if (NONE_ERROR != rc) {
-          Serial.println("failed in iot_mqtt_subscribe.");
-            }
+                  Serial.print("Subscribing...");
+                  rc = aws_iot_mqtt_subscribe(&subParams);
+                  if (NONE_ERROR != rc) {
+                      Serial.println("failed in iot_mqtt_subscribe.");
+                  }
               }
-  
-              MQTTMessageParams Msg;
+ 
+              Msg = MQTTMessageParamsDefault;
               Msg.qos = QOS_0;
               Msg.isRetained = false;
               
@@ -139,7 +154,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               Msg.pPayload = (void *) cPayload;
               Msg.PayloadLen = strlen(cPayload) + 1;
   
-              MQTTPublishParams Params;
+              Params = MQTTPublishParamsDefault;
               Params.pTopic = "mtktestTopic5";
               Params.MessageParams = Msg;
 
@@ -148,15 +163,15 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               }
   
               while (NONE_ERROR == rc && (publishCount > 0 || infinitePublishFlag)) {
-              rc = iot_mqtt_yield(100);
+                    rc = aws_iot_mqtt_yield(500);
                     delay(1000);
-              Serial.println("-->sleep");
-              delay(100);
-              sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
-              rc = iot_mqtt_publish(&Params);
-              if(publishCount > 0){
+                    Serial.println("-->sleep");
+                    delay(100);
+                    sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
+                    rc = aws_iot_mqtt_publish(&Params);
+                    if(publishCount > 0){
                         publishCount--;
-              }
+                    }
               }
   
               if(NONE_ERROR != rc){
@@ -194,7 +209,7 @@ void setup()
   Serial.println("ok");
 
   CONNECT_IP_ADDRESS = IP_ADDRESS;
-  CONNECT_PORT = PORT;
+  CONNECT_PORT = port;
   
   LTask.remoteCall(bearer_open, NULL);
 }

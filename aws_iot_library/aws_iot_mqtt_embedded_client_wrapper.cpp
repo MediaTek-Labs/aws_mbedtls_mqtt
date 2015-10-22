@@ -13,22 +13,69 @@
  * permissions and limitations under the License.
  */
 #include <stdio.h>
-#include "mqtt_interface.h"
+#include "aws_iot_mqtt_interface.h"
 #include "MQTTClient.h"
+#include <Arduino.h>
 
 static Network n;
 static Client c;
 static iot_disconnect_handler clientDisconnectHandler;
 
-#define TxBufLen 512
-#define RxBufLen 512
-static unsigned char writebuf[TxBufLen];
-static unsigned char readbuf[RxBufLen];
+static unsigned char writebuf[AWS_IOT_MQTT_TX_BUF_LEN];
+static unsigned char readbuf[AWS_IOT_MQTT_RX_BUF_LEN];
 
-#define NUM_HANDLERS 5
+
+
+const MQTTConnectParams MQTTConnectParamsDefault = {
+		.pHostURL = AWS_IOT_MQTT_HOST,
+		.port = AWS_IOT_MQTT_PORT,
+		.pRootCALocation = NULL,
+		.pDeviceCertLocation = NULL,
+		.pDevicePrivateKeyLocation = NULL,
+		.pClientID = NULL,
+		.pUserName = NULL,
+		.pPassword = NULL,
+		.MQTTVersion = MQTT_3_1_1,
+		.KeepAliveInterval_sec = 10,
+		.isCleansession = true,
+		.isWillMsgPresent = false,
+		.will={.pTopicName = NULL, .pMessage = NULL, .isRetained = false, .qos = QOS_0},
+		.mqttCommandTimeout_ms = 1000,
+		.tlsHandshakeTimeout_ms = 2000,
+		.isSSLHostnameVerify = true,
+		.disconnectHandler = NULL
+};
+
+const MQTTPublishParams MQTTPublishParamsDefault={
+		.pTopic = NULL,
+		.MessageParams = {.qos = QOS_0, .isRetained=false, .isDuplicate = false, .id = 0, .pPayload = NULL, .PayloadLen = 0}
+};
+const MQTTSubscribeParams MQTTSubscribeParamsDefault={
+		.pTopic = NULL,
+		.qos = QOS_0,
+		.mHandler = NULL
+};
+const MQTTCallbackParams MQTTCallbackParamsDefault={
+		.pTopicName = NULL,
+		.TopicNameLen = 0,
+		.MessageParams = {.qos = QOS_0, .isRetained=false, .isDuplicate = false, .id = 0, .pPayload = NULL, .PayloadLen = 0}
+};
+const MQTTMessageParams MQTTMessageParamsDefault={
+		.qos = QOS_0,
+		.isRetained=false,
+		.isDuplicate = false,
+		.id = 0,
+		.pPayload = NULL,
+		.PayloadLen = 0
+};
+const MQTTwillOptions MQTTwillOptionsDefault={
+		.pTopicName = NULL,
+		.pMessage = NULL,
+		.isRetained = false,
+		.qos = QOS_0
+};
+
 #define GETLOWER4BYTES 0x0FFFFFFFF
-
-
 void pahoMessageCallback(MessageData* md) {
 	MQTTMessage* message = md->message;
 	MQTTCallbackParams params;
@@ -70,7 +117,9 @@ static IoT_Error_t parseConnectParamsForError(MQTTConnectParams *pParams) {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams) {
+static bool isPowerCycle = true;
+
+IoT_Error_t aws_iot_mqtt_connect(MQTTConnectParams *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	rc = parseConnectParamsForError(pParams);
@@ -90,7 +139,13 @@ IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams) {
 		rc = (IoT_Error_t)iot_tls_connect(&n, TLSParams);
 
 		if (NONE_ERROR == rc) {
-			MQTTClient(&c, &n, 1000, writebuf, TxBufLen, readbuf, RxBufLen);
+			// This implementation assumes you are not going to switch between cleansession 1 to 0
+			// As we don't have a default subscription handler support in the MQTT client every time a device power cycles it has to re-subscribe to let the MQTT client to pass the message up to the application callback.
+			// The default message handler will be implemented in the future revisions.
+			if(pParams->isCleansession || isPowerCycle){
+				MQTTClient(&c, &n, (unsigned int)(pParams->mqttCommandTimeout_ms), writebuf, AWS_IOT_MQTT_TX_BUF_LEN, readbuf, AWS_IOT_MQTT_RX_BUF_LEN);
+				isPowerCycle = false;
+			}
 
 			MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
 
@@ -129,7 +184,7 @@ IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams) {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
+IoT_Error_t aws_iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	//change qos to 0 here
@@ -142,7 +197,7 @@ IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams) {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams) {
+IoT_Error_t aws_iot_mqtt_publish(MQTTPublishParams *pParams) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	MQTTMessage Message;
@@ -160,7 +215,7 @@ IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams) {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_unsubscribe(char *pTopic) {
+IoT_Error_t aws_iot_mqtt_unsubscribe(char *pTopic) {
 	IoT_Error_t rc = NONE_ERROR;
 
 	if(0 != MQTTUnsubscribe(&c, pTopic)){
@@ -169,7 +224,7 @@ IoT_Error_t iot_mqtt_unsubscribe(char *pTopic) {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_disconnect() {
+IoT_Error_t aws_iot_mqtt_disconnect() {
 	IoT_Error_t rc = NONE_ERROR;
 
 	if(0 != MQTTDisconnect(&c)){
@@ -179,7 +234,7 @@ IoT_Error_t iot_mqtt_disconnect() {
 	return rc;
 }
 
-IoT_Error_t iot_mqtt_yield(int timeout) {
+IoT_Error_t aws_iot_mqtt_yield(int timeout) {
 	IoT_Error_t rc = NONE_ERROR;
 	if(0 != MQTTYield(&c, timeout)){
 		rc = YIELD_ERROR;
@@ -187,16 +242,16 @@ IoT_Error_t iot_mqtt_yield(int timeout) {
 	return rc;
 }
 
-bool iot_is_mqtt_connected(void) {
+bool aws_iot_is_mqtt_connected(void) {
 	return c.isconnected;
 }
 
-void iot_mqtt_init(MQTTClient_t *pClient){
-	pClient->connect = iot_mqtt_connect;
-	pClient->disconnect = iot_mqtt_disconnect;
-	pClient->isConnected = iot_is_mqtt_connected;
-	pClient->publish = iot_mqtt_publish;
-	pClient->subscribe = iot_mqtt_subscribe;
-	pClient->unsubscribe = iot_mqtt_unsubscribe;
-	pClient->yield = iot_mqtt_yield;
+void aws_iot_mqtt_init(MQTTClient_t *pClient){
+	pClient->connect = aws_iot_mqtt_connect;
+	pClient->disconnect = aws_iot_mqtt_disconnect;
+	pClient->isConnected = aws_iot_is_mqtt_connected;
+	pClient->publish = aws_iot_mqtt_publish;
+	pClient->subscribe = aws_iot_mqtt_subscribe;
+	pClient->unsubscribe = aws_iot_mqtt_unsubscribe;
+	pClient->yield = aws_iot_mqtt_yield;
 }

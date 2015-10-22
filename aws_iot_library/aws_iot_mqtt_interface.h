@@ -14,17 +14,17 @@
  */
 
 /**
- * @file mqtt_interface.h
+ * @file aws_iot_mqtt_interface.h
  * @brief Interface definition for MQTT client.
  */
 
 #ifndef AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H_
 #define AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H_
 
-#include "iot_error.h"
 #include "stddef.h"
 #include "stdbool.h"
 #include "stdint.h"
+#include "aws_iot_error.h"
 
 /**
  * @brief MQTT Version Type
@@ -63,6 +63,7 @@ typedef struct {
 	bool isRetained;		///< NOT supported
 	QoSLevel qos;			///< QoS of LWT message
 } MQTTwillOptions;
+extern const MQTTwillOptions MQTTwillOptionsDefault;
 
 /**
  * @brief Disconnect Callback Handler Type
@@ -97,6 +98,7 @@ typedef struct {
 	bool isSSLHostnameVerify;			///< Client should perform server certificate hostname validation.
 	iot_disconnect_handler disconnectHandler;	///< Callback to be invoked upon connection loss.
 } MQTTConnectParams;
+extern const MQTTConnectParams MQTTConnectParamsDefault;
 
 /**
  * @brief MQTT Message Parameters
@@ -112,7 +114,7 @@ typedef struct {
 	void *pPayload;			///< Pointer to MQTT message payload (bytes).
 	uint32_t PayloadLen;	///< Length of MQTT payload.
 } MQTTMessageParams;
-
+extern const MQTTMessageParams MQTTMessageParamsDefault;
 /**
  * @brief MQTT Callback Function Parameters
  *
@@ -124,6 +126,7 @@ typedef struct {
 	uint16_t TopicNameLen;				///< Length of the topic string.
 	MQTTMessageParams MessageParams;	///< Message parameters structure.
 } MQTTCallbackParams;
+extern const MQTTCallbackParams MQTTCallbackParamsDefault;
 
 /**
  * @brief MQTT Callback Function
@@ -146,6 +149,7 @@ typedef struct {
 	QoSLevel qos;					///< Quality of service of the subscription.
 	iot_message_handler mHandler;	///< Callback to be invoked upon receipt of a message on the subscribed topic.
 } MQTTSubscribeParams;
+extern const MQTTSubscribeParams MQTTSubscribeParamsDefault;
 
 /**
  * @brief MQTT Publish Parameters
@@ -157,6 +161,7 @@ typedef struct {
 	char *pTopic;						///< Pointer to the string defining the desired publishing topic.
 	MQTTMessageParams MessageParams;	///< Parameters defining the message to be published.
 } MQTTPublishParams;
+extern const MQTTPublishParams MQTTPublishParamsDefault;
 
 /**
  * @brief MQTT Connection Function
@@ -166,7 +171,7 @@ typedef struct {
  * @param pParams	Pointer to MQTT connection parameters
  * @return An IoT Error Type defining successful/failed connection
  */
-IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams);
+IoT_Error_t aws_iot_mqtt_connect(MQTTConnectParams *pParams);
 
 /**
  * @brief Publish an MQTT message on a topic
@@ -179,7 +184,7 @@ IoT_Error_t iot_mqtt_connect(MQTTConnectParams *pParams);
  * @param pParams	Pointer to MQTT publish parameters
  * @return An IoT Error Type defining successful/failed publish
  */
-IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams);
+IoT_Error_t aws_iot_mqtt_publish(MQTTPublishParams *pParams);
 
 /**
  * @brief Subscribe to an MQTT topic.
@@ -191,7 +196,7 @@ IoT_Error_t iot_mqtt_publish(MQTTPublishParams *pParams);
  * @param pParams	Pointer to MQTT subscribe parameters
  * @return An IoT Error Type defining successful/failed subscription
  */
-IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
+IoT_Error_t aws_iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
 
 /**
  * @brief Unsubscribe to an MQTT topic.
@@ -200,10 +205,10 @@ IoT_Error_t iot_mqtt_subscribe(MQTTSubscribeParams *pParams);
  * to an MQTT topic.
  * @note Call is blocking.  The call returns after the receipt of the UNSUBACK control packet.
  *
- * @param pTopic Pointer to the requested topic string.
+ * @param pTopic Pointer to the requested topic string. Ensure the string is null terminated
  * @return An IoT Error Type defining successful/failed unsubscription
  */
-IoT_Error_t iot_mqtt_unsubscribe(char *pTopic);
+IoT_Error_t aws_iot_mqtt_unsubscribe(char *pTopic);
 
 /**
  * @brief Disconnect an MQTT Connection
@@ -212,7 +217,7 @@ IoT_Error_t iot_mqtt_unsubscribe(char *pTopic);
  *
  * @return An IoT Error Type defining successful/failed send of the disconnect control packet.
  */
-IoT_Error_t iot_mqtt_disconnect(void);
+IoT_Error_t aws_iot_mqtt_disconnect(void);
 
 /**
  * @brief Yield to the MQTT client
@@ -229,7 +234,7 @@ IoT_Error_t iot_mqtt_disconnect(void);
  *         If this call results in an error it is likely the MQTT connection has dropped.
  *         iot_is_mqtt_connected can be called to confirm.
  */
-IoT_Error_t iot_mqtt_yield(int timeout);
+IoT_Error_t aws_iot_mqtt_yield(int timeout);
 
 /**
  * @brief Is the MQTT client currently connected?
@@ -239,7 +244,7 @@ IoT_Error_t iot_mqtt_yield(int timeout);
  *
  * @return true = connected, false = not currently connected
  */
-bool iot_is_mqtt_connected(void);
+bool aws_iot_is_mqtt_connected(void);
 
 typedef IoT_Error_t (*pConnectFunc_t)(MQTTConnectParams *pParams);
 typedef IoT_Error_t (*pPublishFunc_t)(MQTTPublishParams *pParams);
@@ -275,9 +280,8 @@ typedef struct{
  * AWS IoT MQTT wrapper layer.  This is done through function pointers to the
  * interface functions.
  *
- * @return true = connected, false = not currently connected
  */
-void iot_mqtt_init(MQTTClient_t *pClient);
+void aws_iot_mqtt_init(MQTTClient_t *pClient);
 
 
 #endif /* AWS_IOT_SDK_SRC_IOT_MQTT_INTERFACE_H_ */

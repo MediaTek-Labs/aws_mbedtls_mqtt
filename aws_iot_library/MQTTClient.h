@@ -19,13 +19,14 @@
 
 #include "MQTTPacket.h"
 #include "stdio.h"
+#include "aws_iot_config.h"
 
 //Platform specific implementation header file
 #include "network_interface.h"
 #include "timer_interface.h"
 
 #define MAX_PACKET_ID 65535
-#define MAX_MESSAGE_HANDLERS 5
+#define MAX_MESSAGE_HANDLERS AWS_IOT_MQTT_NUM_SUBSCRIBE_HANDLERS
 
 enum QoS { QOS0, QOS1, QOS2 };
 

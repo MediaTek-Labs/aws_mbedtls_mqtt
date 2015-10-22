@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include "network_interface.h"
-#include "iot_error.h"
-#include "iot_log.h"
 #include <stdbool.h>
 #include <string.h>
 
+#include "aws_iot_error.h"
+#include "aws_iot_log.h"
+#include "network_interface.h"
 #include "config.h"
 
 #include "net.h"

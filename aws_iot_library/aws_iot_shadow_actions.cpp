@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include "iot_shadow_actions.h"
-#include "iot_shadow_records.h"
-#include "iot_shadow_json.h"
-#include "iot_log.h"
-#include "iot_shadow_config.h"
+#include "aws_iot_shadow_actions.h"
+
+#include "aws_iot_log.h"
+#include "aws_iot_shadow_json.h"
+#include "aws_iot_shadow_records.h"
+#include "aws_iot_config.h"
 
 IoT_Error_t iot_shadow_action(MQTTClient_t *pClient, const char *pThingName, ShadowActions_t action,
 		const char *pJsonDocumentToBeSent, fpActionCallback_t callback, void *pCallbackContext,

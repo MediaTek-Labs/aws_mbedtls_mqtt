@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#ifndef SRC_SHADOW_IOT_SHADOW_RECORDS_H_
-#define SRC_SHADOW_IOT_SHADOW_RECORDS_H_
+#ifndef SRC_SHADOW_AWS_IOT_SHADOW_RECORDS_H_
+#define SRC_SHADOW_AWS_IOT_SHADOW_RECORDS_H_
 
 #include <stdbool.h>
-#include "iot_shadow.h"
-#include "iot_shadow_config.h"
+
+#include "aws_iot_shadow_interface.h"
+#include "aws_iot_config.h"
 
 
 extern uint32_t shadowJsonVersionNum;
@@ -38,4 +39,4 @@ void HandleExpiredResponseCallbacks(void);
 void initDeltaTokens(void);
 IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct);
 
-#endif /* SRC_SHADOW_IOT_SHADOW_RECORDS_H_ */
+#endif /* SRC_SHADOW_AWS_IOT_SHADOW_RECORDS_H_ */

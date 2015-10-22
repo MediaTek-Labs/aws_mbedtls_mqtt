@@ -14,7 +14,7 @@
  */
 
 /**
- * @file json_utils.h
+ * @file aws_json_utils.h
  * @brief Utilities for manipulating JSON
  *
  * json_utils provides JSON parsing utilities for use with the IoT SDK.
@@ -27,7 +27,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "iot_error.h"
+
+#include "aws_iot_error.h"
 #include "jsmn.h"
 
 // utility functions
