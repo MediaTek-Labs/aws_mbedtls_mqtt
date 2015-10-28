@@ -8,5 +8,11 @@ More on Amazon IoT is available here: http://aws.amazon.com/iot/getting-started
 
 For Mac version:
 
-Please replace Arduino/Java/hardware/arduino/mtk/platform.txt from Mac_platform folder with correct Arduino version.
-This is a temporary solution, will be fixed soon.
+Noticed:
+If you are using Mac, please replace platform.txt to the following place:
+
+Arduino 1.5.7: /Applications/Arduino.app/Contents/Resources/Java/hardware/arduino/mtk/platform.txt
+
+Arduino 1.6.5: /Users/{YOUR_USERNAME}/Library/Arduino15/packages/LinkIt/hardware/arm/1.1.17/platform.txt
+
+You could find the platform.txt under Mac_platform folder
