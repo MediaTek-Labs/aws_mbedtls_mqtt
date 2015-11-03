@@ -28,24 +28,12 @@
 #include "aws_iot_version.h"
 #include "aws_iot_log.h"
 #include "aws_mtk_iot_config.h"
-
 #ifdef connect
 #undef connect
 #endif
-
 #include <LTask.h>
 #include <LWiFi.h>
 #include <LWiFiClient.h>
-
-/* change Wifi settings here */
-#define WIFI_AP "mtktest"
-#define WIFI_PASSWORD "bslp6173"
-#define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
-
-/* change server settings here */
-VMSTR IP_ADDRESS = "54.86.88.20"; //currently only support IP address
-/* end of user settings */
-
 
 /**
  * @brief Default MQTT HOST URL is pulled from the aws_iot_config.h
@@ -107,6 +95,8 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
         case VM_BEARER_ACTIVATING:
             break;
         case VM_BEARER_ACTIVATED:
+              /************************ Add your code here ************************/ 
+            
               rc = NONE_ERROR;
               i = 0;
               infinitePublishFlag = true;
@@ -135,7 +125,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
   
               subParams = MQTTSubscribeParamsDefault;
               subParams.mHandler = MQTTcallbackHandler;
-              subParams.pTopic = AWS_IOT_TOPIC_NAME;
+              subParams.pTopic = "mtktestTopic5";
               subParams.qos = QOS_0;
               
               if (NONE_ERROR == rc) {
@@ -155,7 +145,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               Msg.PayloadLen = strlen(cPayload) + 1;
   
               Params = MQTTPublishParamsDefault;
-              Params.pTopic = AWS_IOT_TOPIC_NAME;
+              Params.pTopic = "mtktestTopic5";
               Params.MessageParams = Msg;
 
               if(publishCount != 0){
@@ -163,10 +153,9 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               }
   
               while (NONE_ERROR == rc && (publishCount > 0 || infinitePublishFlag)) {
-                    rc = aws_iot_mqtt_yield(500);
-                    delay(1000);
+                    rc = aws_iot_mqtt_yield(1000); //please don't try to put it lower than 1000, otherwise it may going to timeout easily and no response  
                     Serial.println("-->sleep");
-                    delay(100);
+                    delay(1000);
                     sprintf(cPayload, "%s : %d ", "hello from SDK", i++);
                     rc = aws_iot_mqtt_publish(&Params);
                     if(publishCount > 0){
@@ -180,6 +169,8 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               else{
               Serial.println("Publish done\n");
               }
+              
+              /************************ End for your own code ************************/ 
               break;
         case VM_BEARER_DEACTIVATING:
             break;

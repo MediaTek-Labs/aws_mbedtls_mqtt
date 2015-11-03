@@ -32,7 +32,6 @@
 #include "aws_iot_json_utils.h"
 #include "aws_iot_log.h"
 #include "aws_mtk_iot_config.h"
-
 #ifdef connect
 #undef connect
 #endif
@@ -40,11 +39,18 @@
 #include <LWiFi.h>
 #include <LWiFiClient.h>
 
-/* change Wifi settings here */
-#define WIFI_AP "mtktest"
-#define WIFI_PASSWORD "bslp6173"
-#define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
+/**
+ * @brief Default MQTT HOST URL is pulled from the aws_iot_config.h
+ */
+char HostAddress[255] = AWS_IOT_MQTT_HOST;
+/**
+ * @brief Default MQTT port is pulled from the aws_iot_config.h
+ */
+VMINT port = AWS_IOT_MQTT_PORT;
 
+char cafileName[] = AWS_IOT_ROOT_CA_FILENAME;
+char clientCRTName[] = AWS_IOT_CERTIFICATE_FILENAME;
+char clientKeyName[] = AWS_IOT_PRIVATE_KEY_FILENAME;
 
 #define ROOMTEMPERATURE_UPPERLIMIT 32.0f
 #define ROOMTEMPERATURE_LOWERLIMIT 25.0f
@@ -64,19 +70,8 @@ static void simulateRoomTemperature(float *pRoomTemperature){
 }
 
 QoSLevel qos = QOS_0;
-bool infinitePublishFlag;
-char cPayload[100];
 int32_t i;
 IoT_Error_t rc;
-char HostAddress[255] = AWS_IOT_MQTT_HOST;
-VMINT port = AWS_IOT_MQTT_PORT;
-uint8_t numPubs = 5;
-uint32_t publishCount = 0;
-double tempSensor[] = {73.1, 71.2, 68.7, 70.1, 75.4};
-int test = 0;
-uint8_t loopcnt = 0;
-uint16_t pubcnt = 0;
-uint8_t tempSensorIndex = 0;
 
 LWiFiClient c;
 
@@ -145,6 +140,8 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
         case VM_BEARER_ACTIVATING:
             break;
         case VM_BEARER_ACTIVATED:
+              /************************ Add your code here ************************/ 
+        
               rc = NONE_ERROR;
               i = 0;
               
@@ -168,9 +165,9 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               sp.pMqttClientId = AWS_IOT_MQTT_CLIENT_ID;
 	      sp.pHost = HostAddress;
 	      sp.port = port;
-	      sp.pClientCRT = clientCRTName;
-	      sp.pClientKey = clientKeyName;
-	      sp.pRootCA = cafileName;
+	      sp.pClientCRT = AWS_IOT_CERTIFICATE_FILENAME;
+	      sp.pClientKey = AWS_IOT_PRIVATE_KEY_FILENAME;
+	      sp.pRootCA = AWS_IOT_ROOT_CA_FILENAME;
   
               Serial.print("  . Shadow Init... ");
               rc = aws_iot_shadow_init(&mqttClient);
@@ -194,7 +191,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               temperature = STARTING_ROOMTEMPERATURE;
               // loop and publish a change in temperature
 	      while (NONE_ERROR == rc) {
-		rc = aws_iot_shadow_yield(&mqttClient, 2000);
+		rc = aws_iot_shadow_yield(&mqttClient, 1000);   //please don't try to put it lower than 1000, otherwise it may going to timeout easily and no response  
 		delay(1000);
 		Serial.println("=======================================================================================");
 		Serial.print("On Device: window state ");
@@ -209,15 +206,13 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 			windowOpen = true;
                 rc = aws_iot_shadow_init_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
                 if (rc == NONE_ERROR) {
-		  rc = aws_iot_shadow_add_reported(JsonDocumentBuffer, sizeOfJsonDocumentBuffer, 2, &temperatureHandler,
-					&windowActuator);
+		  rc = aws_iot_shadow_add_reported(JsonDocumentBuffer, sizeOfJsonDocumentBuffer, 2, &temperatureHandler, &windowActuator);
 		  if (rc == NONE_ERROR) {
 			rc = aws_iot_finalize_json_document(JsonDocumentBuffer, sizeOfJsonDocumentBuffer);
                         if (rc == NONE_ERROR){
 			    Serial.print("Update Shadow: ");
                             Serial.println(JsonDocumentBuffer);
-		            rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback,
-					NULL, 4, true);
+		            rc = aws_iot_shadow_update(&mqttClient, AWS_IOT_MY_THING_NAME, JsonDocumentBuffer, ShadowUpdateStatusCallback, NULL, 4, true);
                         }
 		  }
                 }
@@ -235,6 +230,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
 		ERROR("Disconnect error");
 	      }
   
+              /************************ End for your own code ************************/ 
               break;
         case VM_BEARER_DEACTIVATING:
             break;

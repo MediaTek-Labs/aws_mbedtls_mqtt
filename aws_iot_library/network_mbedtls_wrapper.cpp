@@ -280,6 +280,9 @@ int iot_tls_read(Network *pNetwork, unsigned char *pMsg, int len, int timeout_ms
 	bool isErrorFlag = false;
 	bool isCompleteFlag = false;
 
+	if (timeout_ms != 0)
+		mbedtls_ssl_conf_read_timeout(&conf, timeout_ms);
+
 	do {
 		ret = mbedtls_ssl_read(&ssl, pMsg, len);
 		if (ret > 0) {

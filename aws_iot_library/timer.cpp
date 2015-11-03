@@ -22,9 +22,11 @@
 #include <sys/types.h>
 #include "timer_interface.h"
 #include <Arduino.h>
+#include <vmdatetime.h>
 
 #include <LDateTime.h>
 
+//sub time from timer
 void Ltimersub(const timeval* tvp, const timeval* uvp, timeval* vvp){
   if (tvp->tv_sec < uvp->tv_sec){
   		vvp->tv_sec = 0;
@@ -40,60 +42,59 @@ void Ltimersub(const timeval* tvp, const timeval* uvp, timeval* vvp){
   }
 }
 
+//add time to timer
 void Ltimeradd(const timeval* tvp, const timeval* uvp, timeval* vvp){
   vvp->tv_sec = tvp->tv_sec + uvp->tv_sec;
   vvp->tv_usec = tvp->tv_usec + uvp->tv_usec;
 }
 
+//count timer and return true or false if the time ends up
 char expired(Timer* timer)
 {
 	timeval now, res;
-	unsigned int rtc;
-	// gettimeofday(&now, NULL);
-	LDateTime.getRtc(&rtc);
-	now.tv_sec = rtc;
-	now.tv_usec = 0;
+	VMUINT32 start;
+	start = vm_ust_get_current_time();
+	now.tv_sec = start/1000000;
+	now.tv_usec = start%(now.tv_sec * 1000000);
 	Ltimersub(&timer->end_time, &now, &res);
+
 	return res.tv_sec == 0;
 }
 
+//add time to the timer in microseconds level
 void countdown_ms(Timer* timer, unsigned int timeout)
 {
 	timeval now;
-	unsigned int rtc;
-	// gettimeofday(&now, NULL);
-	LDateTime.getRtc(&rtc);
-	now.tv_sec = rtc;
-	now.tv_usec = 0;
-	timeval interval;
-	if ((timeout%1000)>1)
-		interval = {(timeout / 1000) + 1, 0};
-	else
-		interval = {(timeout / 1000), 0};
+	VMUINT32 start;
+	start = vm_ust_get_current_time();
+	now.tv_sec = start / 1000000;
+	now.tv_usec = start % (now.tv_sec * 1000000);
+	timeval interval = { timeout / 1000, (timeout % 1000) * 1000 };
+
 	Ltimeradd(&now, &interval, &timer->end_time);
 }
 
+//add time to the timer in seconds level
 void countdown(Timer* timer, unsigned int timeout)
 {
 	timeval now;
-	unsigned int rtc;
-	// gettimeofday(&now, NULL);
-	LDateTime.getRtc(&rtc);
-	now.tv_sec = rtc;
-	now.tv_usec = 0;
+	VMUINT32 start;
+	start = vm_ust_get_current_time();
+	now.tv_sec = start / 1000000;
+	now.tv_usec = start % (now.tv_sec * 1000000);
 	timeval interval = {timeout, 0};
+
 	Ltimeradd(&now, &interval, &timer->end_time);
 }
 
+//calculate the left time in microseconds level
 int left_ms(Timer* timer)
 {
 	timeval now, res;
-	unsigned int rtc;
-	// gettimeofday(&now, NULL);
-	LDateTime.getRtc(&rtc);
-	now.tv_sec = rtc;
-	now.tv_usec = 0;
-	timer->end_time.tv_usec = 0;
+	VMUINT32 start;
+	start = vm_ust_get_current_time();
+	now.tv_sec = start / 1000000;
+	now.tv_usec = start % (now.tv_sec * 1000000);
 	Ltimersub(&timer->end_time, &now, &res);
 	//printf("left %d ms\n", (res.tv_sec < 0) ? 0 : res.tv_sec * 1000 + res.tv_usec / 1000);
 	return (res.tv_sec < 0) ? 0 : res.tv_sec * 1000;
