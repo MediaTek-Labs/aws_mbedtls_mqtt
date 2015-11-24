@@ -30,6 +30,7 @@
 #define AWS_IOT_ROOT_CA_FILENAME       "G5.pem" ///< Root CA file name
 #define AWS_IOT_CERTIFICATE_FILENAME   "cert.pem" ///< device signed certificate file name
 #define AWS_IOT_PRIVATE_KEY_FILENAME   "privatekey.pem" ///< Device private key filename
+#define AWS_IOT_TOPIC_NAME             "mtktestTopic5" //MQTT subscribe/publish Topic name
 // =================================================
 
 /* change Wifi settings here */

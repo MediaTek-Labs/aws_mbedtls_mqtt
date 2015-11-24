@@ -28,8 +28,8 @@
 #define AWS_IOT_MQTT_CLIENT_ID         "LinkitOne" ///< MQTT client ID should be unique for every device
 #define AWS_IOT_MY_THING_NAME 	       "mtk_aws_1" ///< Thing Name of the Shadow this device is associated with
 #define AWS_IOT_ROOT_CA_FILENAME       "G5.pem" ///< Root CA file name
-#define AWS_IOT_CERTIFICATE_FILENAME   "cert.pem" ///< device signed certificate file name
-#define AWS_IOT_PRIVATE_KEY_FILENAME   "privatekey.pem" ///< Device private key filename
+#define AWS_IOT_CERTIFICATE_FILENAME   "a802680876-certificate.pem.crt" ///< device signed certificate file name
+#define AWS_IOT_PRIVATE_KEY_FILENAME   "a802680876-private.pem.key" ///< Device private key filename
 // =================================================
 
 /* change Wifi settings here */

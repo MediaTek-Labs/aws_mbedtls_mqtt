@@ -125,7 +125,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
   
               subParams = MQTTSubscribeParamsDefault;
               subParams.mHandler = MQTTcallbackHandler;
-              subParams.pTopic = "mtktestTopic5";
+              subParams.pTopic = AWS_IOT_TOPIC_NAME;
               subParams.qos = QOS_0;
               
               if (NONE_ERROR == rc) {
@@ -145,7 +145,7 @@ void bearer_callback(VMINT handle, VMINT event, VMUINT data_account_id, void *us
               Msg.PayloadLen = strlen(cPayload) + 1;
   
               Params = MQTTPublishParamsDefault;
-              Params.pTopic = "mtktestTopic5";
+              Params.pTopic = AWS_IOT_TOPIC_NAME;
               Params.MessageParams = Msg;
 
               if(publishCount != 0){
