@@ -23,6 +23,8 @@
 #include "aws_iot_shadow_key.h"
 #include "aws_iot_config.h"
 
+const char* tmp_thing;
+
 static uint32_t clientTokenNum = 0;
 
 //helper functions

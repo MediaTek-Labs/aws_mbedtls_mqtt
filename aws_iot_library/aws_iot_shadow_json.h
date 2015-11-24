@@ -22,6 +22,7 @@
 #include "aws_iot_error.h"
 #include "aws_iot_shadow_json_data.h"
 
+extern const char* tmp_thing;
 
 bool isJsonValidAndParse(const char *pJsonDocument, void *pJsonHandler, int32_t *pTokenCount);
 bool isJsonKeyMatchingAndUpdateValue(const char *pJsonDocument, void *pJsonHandler, int32_t tokenCount,

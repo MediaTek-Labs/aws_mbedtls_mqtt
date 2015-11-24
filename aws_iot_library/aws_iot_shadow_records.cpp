@@ -23,6 +23,7 @@
 #include "aws_iot_log.h"
 #include "aws_iot_shadow_json.h"
 #include "aws_iot_config.h"
+#include <Arduino.h>
 
 typedef struct {
 	char clientTokenID[MAX_SIZE_CLIENT_ID_WITH_SEQUENCE];
@@ -69,6 +70,7 @@ static uint32_t tokenTableIndex = 0;
 static bool deltaTopicSubscribedFlag = false;
 uint32_t shadowJsonVersionNum = 0;
 bool shadowDiscardOldDeltaFlag = true;
+char aws_iot_thing_name[100] = "$aws/things/";
 
 // local helper functions
 static int32_t AckStatusCallback(MQTTCallbackParams params);
@@ -94,7 +96,38 @@ IoT_Error_t registerJsonTokenOnDelta(jsonStruct_t *pStruct) {
 	if (!deltaTopicSubscribedFlag) {
 		MQTTSubscribeParams subParams;
 		subParams.mHandler = shadow_delta_callback;
-		subParams.pTopic = SHADOW_DELTA_TOPIC_WITH_THING_NAME;
+
+		int i;
+
+		for (i=0; i<strlen(tmp_thing); i++){
+			aws_iot_thing_name[12+i] = tmp_thing[i];
+		}
+
+		// "/shadow/update/delta" temporary solution 
+		aws_iot_thing_name[12+i] = '/';
+		aws_iot_thing_name[12+i+1] = 's';
+		aws_iot_thing_name[12+i+2] = 'h';
+		aws_iot_thing_name[12+i+3] = 'a';
+		aws_iot_thing_name[12+i+4] = 'd';
+		aws_iot_thing_name[12+i+5] = 'o';
+		aws_iot_thing_name[12+i+6] = 'w';
+		aws_iot_thing_name[12+i+7] = '/';
+		aws_iot_thing_name[12+i+8] = 'u';
+		aws_iot_thing_name[12+i+9] = 'p';
+		aws_iot_thing_name[12+i+10] = 'd';
+		aws_iot_thing_name[12+i+11] = 'a';
+		aws_iot_thing_name[12+i+12] = 't';
+		aws_iot_thing_name[12+i+13] = 'e';
+		aws_iot_thing_name[12+i+14] = '/';
+		aws_iot_thing_name[12+i+15] = 'd';
+		aws_iot_thing_name[12+i+16] = 'e';
+		aws_iot_thing_name[12+i+17] = 'l';
+		aws_iot_thing_name[12+i+18] = 't';
+		aws_iot_thing_name[12+i+19] = 'a';
+		aws_iot_thing_name[12+i+20] = '\0';
+
+		subParams.pTopic = aws_iot_thing_name;//SHADOW_DELTA_TOPIC_WITH_THING_NAME;
+
 		subParams.qos = QOS_0;
 		rc = pMqttClient->subscribe(&subParams);
 		DEBUG("delta topic %s", SHADOW_DELTA_TOPIC_WITH_THING_NAME);
@@ -153,7 +186,7 @@ static void topicNameFromThingAndAction(char *pTopic, const char *pThingName, Sh
 }
 
 static bool isAckForMyThingName(const char *pTopicName) {
-	if (strstr(pTopicName, AWS_IOT_MY_THING_NAME) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
+	if (strstr(pTopicName, tmp_thing) != NULL && ((strstr(pTopicName, "get/accepted") != NULL) || (strstr(pTopicName, "delta") != NULL))) {
 		return true;
 	}
 	return false;

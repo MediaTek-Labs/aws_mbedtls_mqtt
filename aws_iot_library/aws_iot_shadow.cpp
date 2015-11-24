@@ -13,6 +13,7 @@
  * permissions and limitations under the License.
  */
 
+#include <Arduino.h>
 #include "aws_iot_error.h"
 #include "aws_iot_log.h"
 #include "aws_iot_shadow_actions.h"
@@ -88,6 +89,8 @@ IoT_Error_t aws_iot_shadow_connect(MQTTClient_t *pClient, ShadowParameters_t *pP
 	ConnectParams.port = pParams->port;
 	ConnectParams.disconnectHandler = NULL;
 
+	tmp_thing = pParams->pMyThingName;
+
 	rc = pClient->connect(&ConnectParams);
 
 	if(rc == NONE_ERROR){
@@ -122,6 +125,7 @@ IoT_Error_t aws_iot_shadow_update(MQTTClient_t *pClient, const char *pThingName,
 		fpActionCallback_t callback, void *pContextData, uint8_t timeout_seconds, bool isPersistentSubscribe) {
 
 	IoT_Error_t ret_val = NONE_ERROR;
+	
 
 	if (!(pClient->isConnected())) {
 		return CONNECTION_ERROR;
