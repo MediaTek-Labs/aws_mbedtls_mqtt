@@ -13,9 +13,13 @@ http://iot-hackseries.s3-website-us-west-2.amazonaws.com/linkitone.html
 
 
 Release Note for 2/22/2016 update:
+
 a.) Added feature for resolving AWS server domain name automatically
+
 b.) Supported GPRS connection
+
 c.) Added example code for reading value from sensor periodically
+
 d.) Fixed unstable issue for long time running
 
 
