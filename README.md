@@ -11,8 +11,15 @@ More on Amazon IoT is available here: http://aws.amazon.com/iot/getting-started
 Amazon maraca example:
 http://iot-hackseries.s3-website-us-west-2.amazonaws.com/linkitone.html
 
-IMPORTANT: 
-As a temporary workaround, you will need to replace platform.txt in the following locations with the platform.txt file included in the zip archive above:
+
+Release Note for 2/22/2016 update:
+a.) Added feature for resolving AWS server domain name automatically
+b.) Supported GPRS connection
+c.) Added example code for reading value from sensor periodically
+d.) Fixed unstable issue for long time running
+
+
+Note: If you have problem for showing logs in monitor tool, please try to replace platform.txt in the following locations with the platform.txt file included in the zip archive above (This issue should be resolved in the latest SDK):
 
 Mac:
 
