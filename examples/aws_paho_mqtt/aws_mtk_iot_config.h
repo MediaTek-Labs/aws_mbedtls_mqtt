@@ -34,7 +34,7 @@
 // =================================================
 
 //set to use Wifi or GPRS
-#define WIFI_USED false  //true (Wifi) or false (GPRS)
+#define WIFI_USED true  //true (Wifi) or false (GPRS)
 
 /* change Wifi settings here */
 #define WIFI_AP "mtktest"
