@@ -24,8 +24,6 @@
 #include <Arduino.h>
 #include <vmdatetime.h>
 
-#include <LDateTime.h>
-
 //sub time from timer
 void Ltimersub(const timeval* tvp, const timeval* uvp, timeval* vvp){
   if (tvp->tv_sec < uvp->tv_sec){
