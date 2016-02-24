@@ -47,7 +47,7 @@ int sendPacket(Client* c, int length, Timer* timer)
     }
     if (sent == length)
     {
-        //countdown(&c->ping_timer, c->keepAliveInterval); // record the fact that we have successfully sent the packet
+        countdown(&c->ping_timer, c->keepAliveInterval); // record the fact that we have successfully sent the packet
         rc = SUCCESS;
     }
     else
@@ -293,7 +293,7 @@ int cycle(Client* c, Timer* timer)
             else if ((len = MQTTSerialize_ack(c->buf, c->buf_size, PUBREL, 0, mypacketid)) <= 0)
                 rc = FAILURE;
             else if ((rc = sendPacket(c, len, timer)) != SUCCESS) // send the PUBREL packet
-                rc = FAILURE; // there was a problem
+                rc = FAILURE; // there was a problem,
             if (rc == FAILURE)
                 goto exit; // there was a problem
             break;
@@ -504,18 +504,21 @@ int MQTTPublish(Client* c, const char* topicName, MQTTMessage* message)
     InitTimer(&timer);
     countdown_ms(&timer, c->command_timeout_ms);
     
-    if (!c->isconnected)
+    if (!c->isconnected){
         goto exit;
+    }
 
     if (message->qos == QOS1 || message->qos == QOS2)
         message->id = getNextPacketId(c);
     
     len = MQTTSerialize_publish(c->buf, c->buf_size, 0, message->qos, message->retained, message->id, 
               topic, (unsigned char*)message->payload, message->payloadlen);
-    if (len <= 0)
+    if (len <= 0) {
         goto exit;
-    if ((rc = sendPacket(c, len, &timer)) != SUCCESS) // send the subscribe packet
+    }
+    if ((rc = sendPacket(c, len, &timer)) != SUCCESS) {// send the subscribe packet
         goto exit; // there was a problem
+    }
     
     if (message->qos == QOS1)
     {
@@ -523,11 +526,13 @@ int MQTTPublish(Client* c, const char* topicName, MQTTMessage* message)
         {
             unsigned short mypacketid;
             unsigned char dup, type;
-            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
+            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1) {
                 rc = FAILURE;
+            }
         }
-        else
+        else {
             rc = FAILURE;
+        }
     }
     else if (message->qos == QOS2)
     {
@@ -535,11 +540,13 @@ int MQTTPublish(Client* c, const char* topicName, MQTTMessage* message)
         {
             unsigned short mypacketid;
             unsigned char dup, type;
-            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1)
+            if (MQTTDeserialize_ack(&type, &dup, &mypacketid, c->readbuf, c->readbuf_size) != 1) {
                 rc = FAILURE;
+            }
         }
-        else
+        else {
             rc = FAILURE;
+        }
     }
     
 exit:

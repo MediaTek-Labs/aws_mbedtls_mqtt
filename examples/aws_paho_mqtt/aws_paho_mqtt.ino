@@ -55,11 +55,11 @@ char clientKeyName[] = AWS_IOT_PRIVATE_KEY_FILENAME;
 
 LWiFiClient c;
 bool infinitePublishFlag;
-char cPayload[100];
+//char cPayload[100];
 int32_t i;
 int rc;
 QoSLevel qos = QOS_0;
-char mqtt_message[2048];
+char mqtt_message[30];
 bool doingSetup = true;
 
 int32_t MQTTcallbackHandler(MQTTCallbackParams params) {
@@ -77,7 +77,7 @@ int32_t MQTTcallbackHandler(MQTTCallbackParams params) {
 }
 
 void disconnectCallbackHandler(void) {
-	Serial.println("MQTT Disconnect");
+  Serial.println("MQTT Disconnect");
         Serial.flush();
 }
 
@@ -131,9 +131,9 @@ boolean  mqtt_start(void* ctx)
               connectParams.pDeviceCertLocation = clientCRTName;
               connectParams.pDevicePrivateKeyLocation = clientKeyName;
               connectParams.mqttCommandTimeout_ms = 2000;
-	      connectParams.tlsHandshakeTimeout_ms = 5000;
-	      connectParams.isSSLHostnameVerify = true;// ensure this is set to true for production
-	      connectParams.disconnectHandler = disconnectCallbackHandler;
+        connectParams.tlsHandshakeTimeout_ms = 5000;
+        connectParams.isSSLHostnameVerify = true;// ensure this is set to true for production
+        connectParams.disconnectHandler = disconnectCallbackHandler;
   
               rc = aws_iot_mqtt_connect(&connectParams);
               if (NONE_ERROR != rc) {
@@ -177,7 +177,7 @@ boolean wifiResolveDomainName(void *userData)
   IN_ADDR addr;
   
 //  Serial.print("in wifiResolveDomainName, host name is ");
-//	Serial.println(domainName);
+//  Serial.println(domainName);
 
   VMINT resolveState;
   if (WIFI_USED){
@@ -266,10 +266,11 @@ void setup()
 You may need to call it in loop function and then pass the parameter to nativeLoop through a pointer. */
 void loop()
 {
-    int aa[1];
-    aa[0] =analogRead(A0);
+//    int aa[1];
+//    aa[0] =analogRead(A0);
     Serial.flush();
-    LTask.remoteCall(nativeLoop, (void*)aa);  //pass analogRead(A0) value to nativeLoop, in that analogRead could not be called in remoteCall, otherwise it will cause a crash.
+//    LTask.remoteCall(nativeLoop, (void *)aa);  //pass analogRead(A0) value to nativeLoop, in that analogRead could not be called in remoteCall, otherwise it will cause a crash.
+    LTask.remoteCall(nativeLoop, NULL);
     delay(2000);
 }
 
@@ -314,7 +315,7 @@ int publish_MQTT(char * topic, char * message) {
 
   rc = aws_iot_mqtt_yield(1000); //please don't try to put it lower than 1000, otherwise it may going to timeout easily and no response  
   Serial.println("-->sleep");
-  delay(1000);
+//  delay(1000);
 
   // Publish
   Serial.print("Publishing...");
@@ -334,7 +335,7 @@ int publish_MQTT(char * topic, char * message) {
 /* natvieLoop which will use to do your main job in the loop */
 boolean nativeLoop(void* user_data) {
     
-    int *bb = (int*)user_data;
+//    int *bb = (int*)user_data;
     sprintf(mqtt_message, "%s : and read valie is %d ", "hello from SDK", i++);
     
     Serial.println("publish_MQTT go");
