@@ -315,7 +315,7 @@ int publish_MQTT(char * topic, char * message) {
 
   rc = aws_iot_mqtt_yield(1000); //please don't try to put it lower than 1000, otherwise it may going to timeout easily and no response  
   Serial.println("-->sleep");
-//  delay(1000);
+  delay(1000);
 
   // Publish
   Serial.print("Publishing...");
