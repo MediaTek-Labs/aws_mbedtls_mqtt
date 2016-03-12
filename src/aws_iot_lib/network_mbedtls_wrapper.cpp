@@ -19,21 +19,22 @@
 #include "aws_iot_error.h"
 #include "aws_iot_log.h"
 #include "network_interface.h"
-#include "config.h"
+#include "mbedtls\config.h"
 
-#include "net.h"
-#include "ssl.h"
-#include "entropy.h"
-#include "ctr_drbg.h"
-#include "certs.h"
-#include "x509.h"
-#include "error.h"
-#include "debug.h"
-#include "timing.h"
+#include "mbedtls\net.h"
+#include "mbedtls\ssl.h"
+#include "mbedtls\entropy.h"
+#include "mbedtls\ctr_drbg.h"
+#include "mbedtls\certs.h"
+#include "mbedtls\x509.h"
+#include "mbedtls\error.h"
+#include "mbedtls\debug.h"
+#include "mbedtls\timing.h"
+#include "mbedtls\mtk.h"
 
 #include <Arduino.h>
 #include <vmsock.h>
-#include <mtk.h>
+
 
 #define C_ADDRESS CONNECT_IP_ADDRESS
 #define C_PORT CONNECT_PORT
