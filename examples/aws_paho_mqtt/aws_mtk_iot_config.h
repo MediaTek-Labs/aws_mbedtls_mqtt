@@ -23,22 +23,22 @@
 
 // Get from console
 // =================================================
-#define AWS_IOT_MQTT_HOST              "data.iot.us-east-1.amazonaws.com" ///< Customer specific MQTT HOST. The same will be used for Thing Shadow
+#define AWS_IOT_MQTT_HOST              "A21DXA5BCPF81N.iot.us-west-2.amazonaws.com" ///< Customer specific MQTT HOST. The same will be used for Thing Shadow
 #define AWS_IOT_MQTT_PORT              8883 ///< default port for MQTT/S
-#define AWS_IOT_MQTT_CLIENT_ID         "LinkitOne" ///< MQTT client ID should be unique for every device
-#define AWS_IOT_MY_THING_NAME 	       "mtk_aws_1" ///< Thing Name of the Shadow this device is associated with
-#define AWS_IOT_ROOT_CA_FILENAME       "G5.pem" ///< Root CA file name
-#define AWS_IOT_CERTIFICATE_FILENAME   "cert.pem" ///< device signed certificate file name
-#define AWS_IOT_PRIVATE_KEY_FILENAME   "privatekey.pem" ///< Device private key filename
-#define AWS_IOT_TOPIC_NAME             "mtktestTopic5" //MQTT subscribe/publish Topic name
+#define AWS_IOT_MQTT_CLIENT_ID         "NTHU_LinkitOne" ///< MQTT client ID should be unique for every device
+#define AWS_IOT_MY_THING_NAME 	       "mtk_test_mf" //IMPORTANT: for a temporary work around, you also need to modify the same name in your library for aws_iot_config.h (under arduino library path)
+#define AWS_IOT_ROOT_CA_FILENAME       "root.pem" ///< Root CA file name
+#define AWS_IOT_CERTIFICATE_FILENAME   "8cbd725746-certificate.pem.crt" ///< device signed certificate file name
+#define AWS_IOT_PRIVATE_KEY_FILENAME   "8cbd725746-private.pem.key" ///< Device private key filename
+#define AWS_IOT_TOPIC_NAME             "$aws/things/mtk_test_mf/shadow/update" //MQTT subscribe/publish Topic name
 // =================================================
 
 //set to use Wifi or GPRS
 #define WIFI_USED true  //true (Wifi) or false (GPRS)
 
 /* change Wifi settings here */
-#define WIFI_AP "mtktest"
-#define WIFI_PASSWORD "bslp6173"
+#define WIFI_AP "Home-WIFI"
+#define WIFI_PASSWORD "06191026"
 #define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP
 
 /* change GPRS settings here */
