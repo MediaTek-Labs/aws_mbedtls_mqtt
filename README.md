@@ -33,7 +33,7 @@ Just download zip achieve of this repository and rest of steps and method of con
 > - Modify header file **aws_mtk_iot_config.h**
 
 
-```c ('*.c', '*.h')
+```c
 // Get from console
 // =================================================
 #define AWS_IOT_MQTT_HOST              "*.iot.us-west-2.amazonaws.com"
@@ -61,7 +61,7 @@ Just download zip achieve of this repository and rest of steps and method of con
 > - Modify the WIFI connecting information
 
 
-```c ('*.c', '*.h')
+```c
 //set to use Wifi or GPRS
 #define WIFI_USED true  //true (Wifi) or false (GPRS)
 
