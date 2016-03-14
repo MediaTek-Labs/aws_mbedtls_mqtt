@@ -19,14 +19,15 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <vmsock.h>
-#include <net.h>
-#include <mtk.h>
+//#include <net.h>
+//#include <mtk.h>
 
 #include <signal.h>
 #include <limits.h>
-#include "aws_iot_mqtt_interface.h"
+/*#include "aws_iot_mqtt_interface.h"
 #include "aws_iot_version.h"
-#include "aws_iot_log.h"
+#include "aws_iot_log.h"*/
+#include "linkit_aws_header.h"
 #include "aws_mtk_iot_config.h"
 #ifdef connect
 #undef connect

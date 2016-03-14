@@ -1,0 +1,17 @@
+{
+"name": "LinkIt One AWS mqtt library",
+"frameworks": "Arduino",
+"description": "AWS mqtt library based on mbedTLS especially for LinkIt One",
+"url": "https://github.com/ericwahahaha/aws_mbedtls_mqtt",
+"authors":
+[
+{
+        "name": "ericwahahaha"
+}
+],
+"repository":
+{
+    "type": "git",
+    "url": "https://github.com/ericwahahaha/aws_mbedtls_mqtt"
+}
+}

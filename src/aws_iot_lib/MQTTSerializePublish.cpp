@@ -16,7 +16,7 @@
  *******************************************************************************/
 
 #include "MQTTPacket.h"
-#include "StackTrace.h"
+#include "mbedtls\StackTrace.h"
 
 #include <string.h>
 

@@ -20,17 +20,18 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <vmsock.h>
-#include <net.h>
-#include <mtk.h>
+//#include "mbedtls\net.h"
+//#include <mtk.h>
 
 #include <signal.h>
 #include <limits.h>
-#include "aws_iot_mqtt_interface.h"
+/*#include "aws_iot_mqtt_interface.h"
 #include "aws_iot_version.h"
 #include "aws_iot_shadow_interface.h"
 #include "aws_iot_shadow_json_data.h"
 #include "aws_iot_json_utils.h"
-#include "aws_iot_log.h"
+#include "aws_iot_log.h"*/
+#include "linkit_aws_header.h"
 #include "aws_mtk_iot_config.h"
 #ifdef connect
 #undef connect
