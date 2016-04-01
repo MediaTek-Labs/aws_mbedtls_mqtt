@@ -29,7 +29,7 @@
 #include <stdint.h>
 
 #include "aws_iot_error.h"
-#include "mbedtls\jsmn.h"
+#include "mbedtls/jsmn.h"
 
 // utility functions
 /**
