@@ -19,14 +19,10 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <vmsock.h>
-//#include <net.h>
-//#include <mtk.h>
+
 
 #include <signal.h>
 #include <limits.h>
-/*#include "aws_iot_mqtt_interface.h"
-#include "aws_iot_version.h"
-#include "aws_iot_log.h"*/
 #include "linkit_aws_header.h"
 #include "azure_paho_mqtt.h"
 #ifdef connect
@@ -53,6 +49,13 @@ uint32_t publishCount = 0;
 char cafileName[] = AWS_IOT_ROOT_CA_FILENAME;
 char clientCRTName[] = AWS_IOT_CERTIFICATE_FILENAME;
 char clientKeyName[] = AWS_IOT_PRIVATE_KEY_FILENAME;
+
+char clientID[] = AWS_IOT_MQTT_CLIENT_ID;
+char clientUserName[] = AZURE_IOT_USER_NAME;
+char clientPassword[] = AZURE_IOT_USER_PASSWORD;
+
+char subscribetopicname[] = AZURE_IOT_SUB_TOPIC_NAME;
+char publishtopicname[] = AZURE_IOT_PUB_TOPIC_NAME;
 
 LWiFiClient c;
 bool infinitePublishFlag;
@@ -124,7 +127,7 @@ boolean  mqtt_start(void* ctx)
               connectParams.KeepAliveInterval_sec = 10;
               connectParams.isCleansession = true;
               connectParams.MQTTVersion = MQTT_3_1_1;
-              connectParams.pClientID = "linkittest";
+              connectParams.pClientID = clientID;
               connectParams.pHostURL = HostAddress;
               connectParams.port = port;
               connectParams.isWillMsgPresent = false;
@@ -133,8 +136,10 @@ boolean  mqtt_start(void* ctx)
               connectParams.pDevicePrivateKeyLocation = clientKeyName;
               connectParams.mqttCommandTimeout_ms = 2000;
               // azure addded by eric
-              connectParams.pUserName = "nthuiot.azure-devices.net/linkittest";
-              connectParams.pPassword = "SharedAccessSignature sr=nthuiot.azure-devices.net%2fdevices%2flinkittest&sig=Ub%2bzr3h4JV9sl2%2bA5IkWJgNrSAyeReZOSUhK0sTd%2fP0%3d&se=1470301446";
+              if(AZURE_USED){
+                connectParams.pUserName = clientUserName;
+                connectParams.pPassword = clientPassword;
+              }
         connectParams.tlsHandshakeTimeout_ms = 5000;
         connectParams.isSSLHostnameVerify = true;// ensure this is set to true for production
         connectParams.disconnectHandler = disconnectCallbackHandler;
@@ -144,7 +149,7 @@ boolean  mqtt_start(void* ctx)
                   Serial.println("Error in connecting...");
               }
 
-//              rc = subscribe_MQTT(MQTTcallbackHandler, "mtktestTopic5");
+              rc = subscribe_MQTT(MQTTcallbackHandler, subscribetopicname);
               delay(1000);
 
               return true;
@@ -343,6 +348,6 @@ boolean nativeLoop(void* user_data) {
     sprintf(mqtt_message, "%s : and read valie is %d ", "hello from SDK", i++);
 
     Serial.println("publish_MQTT go");
-    rc = publish_MQTT("devices/linkittest/messages/events/", mqtt_message);
+    rc = publish_MQTT(publishtopicname, mqtt_message);
     Serial.flush();
 }
